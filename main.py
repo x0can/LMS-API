@@ -53,3 +53,11 @@ if __name__ == "__main__":
     # Configure module release dates
     start_date = datetime(2024, 12, 1)  # Start date for the first module
     manager.configure_module_release_dates(course_id, module_ids, start_date, interval_weeks=1)
+    
+    
+    
+    # call to fetch_user_progress
+    USER_ID = 254  # Replace with your actual user ID
+    user_progress = fetch_user_progress(COURSE_ID, USER_ID)
+    if user_progress:
+        print("User Progress:", user_progress)
