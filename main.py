@@ -1,6 +1,43 @@
+from flask import Flask, request, jsonify
+
 import os
 from datetime import datetime
 from canvas_course_manager import CanvasCourseManager
+
+
+app = Flask(__name__)
+
+
+# Flask Routes
+@app.route("/courses/<int:course_id>", methods=["GET"])
+def get_course(course_id):
+    return jsonify(manager.get_course(course_id))
+
+@app.route("/users", methods=["GET"])
+def get_user():
+    user_identifier = request.args.get("user_identifier")
+    if not user_identifier:
+        return jsonify({"error": "User identifier is required"}), 400
+    return jsonify(manager.get_user_info(user_identifier))
+
+@app.route("/users", methods=["POST"])
+def create_user():
+    data = request.json
+    if not data or "name" not in data or "email" not in data:
+        return jsonify({"error": "Name and email are required"}), 400
+    return jsonify(manager.create_user(data["name"], data["email"]))
+
+@app.route("/courses/<int:course_id>/enroll", methods=["POST"])
+def enroll_user(course_id):
+    data = request.json
+    if not data or "user_identifier" not in data:
+        return jsonify({"error": "User identifier is required"}), 400
+    return jsonify(manager.enroll_user(course_id, data["user_identifier"]))
+
+@app.route("/courses/<int:course_id>/enrollments", methods=["GET"])
+def fetch_enrollments(course_id):
+    return jsonify(manager.fetch_enrolled_users(course_id))
+
 
 if __name__ == "__main__":
     
