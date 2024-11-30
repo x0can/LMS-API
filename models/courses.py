@@ -1,18 +1,10 @@
-# import os
-# import requests
 from datetime import datetime, timedelta
 import json
-
-# from dotenv import load_dotenv
-
-
-# Load configuration from .env file
-# load_dotenv()
-
+from models.modules import Module
 
 class CourseManager:
     
-    def __init__(self, api_url, api_token, account_id):
+    def __init__(self):
         self.courses = []
 
     def create_course(self, title, description):
@@ -20,6 +12,7 @@ class CourseManager:
         
         self.courses.append(course)
         return course
+
 
 
 class Course:
