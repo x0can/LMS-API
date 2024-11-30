@@ -190,3 +190,5 @@ class CanvasUserManager:
             writer.writerows(progress_data)
 
         print("Course progress report saved as 'course_progress_report.csv'")    
+        
+        return progress_data
