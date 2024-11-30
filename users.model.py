@@ -87,3 +87,49 @@ class CanvasUserManager:
         except requests.exceptions.RequestException as e:
             print(f"Error occurred while creating user: {e}")
             return None    
+    # Enroll a user into a course 
+    def enroll_user(self, course_id, user_identifiers, role="StudentEnrollment"):
+        try:
+            # Verify  the course
+            course = self.get_course(course_id)
+            if not course:
+                print(f"Course {course_id} creation failed.")
+                return
+
+            # Verify user information
+            for user_identifier in user_identifiers:
+            # Verify user information
+                user_info = self.get_user_info(user_identifier)
+                if not user_info:
+                    print(f"User {user_identifier} not found....")
+                    
+                    # You can comment out this part if you do not have authority to add new users
+                    # If user doesn't exist, create them
+                    user_info = self.create_user(user_identifier, user_identifier)
+                    
+                    # You can comment out this part if you do not have authority to add new users
+                    if not user_info:
+                        print(f"Failed to create user {user_identifier}. Skipping...")
+                        continue
+
+                user_id = user_info['id']  # Extract the user ID from the user info
+
+                # Define enrollment data
+                enrollment_data = {
+                    "user_id": user_id,
+                    "type": role,
+                    "enrollment_state": "active"  # Enroll immediately
+                }
+
+                # Send the POST request to enroll the user
+                response = requests.post(
+                    f"{self.api_url}/courses/{course_id}/enrollments",
+                    headers=self.headers,
+                    data=enrollment_data
+                )
+                if response.status_code == 200:
+                    print(f"User {user_id} successfully enrolled in course {course_id}.")
+                else:
+                    print(f"Failed to enroll user {user_id}: {response.text}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error occurred while enrolling user: {e}")    
