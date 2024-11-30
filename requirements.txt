@@ -2,6 +2,7 @@ altgraph @ file:///System/Volumes/Data/SWE/Apps/DT/BuildRoots/BuildRoot7/ActiveB
 attrs==24.2.0
 blinker==1.9.0
 certifi==2024.7.4
+charset-normalizer==3.4.0
 click==8.1.7
 exceptiongroup==1.2.2
 Flask==3.1.0
@@ -16,6 +17,7 @@ MarkupSafe==3.0.2
 outcome==1.3.0.post0
 PySocks==1.7.1
 python-dotenv==1.0.1
+requests==2.32.3
 selenium==4.23.1
 six @ file:///System/Volumes/Data/SWE/Apps/DT/BuildRoots/BuildRoot7/ActiveBuildRoot/Library/Caches/com.apple.xbs/Sources/python3/python3-133.100.1.1/six-1.15.0-py2.py3-none-any.whl
 sniffio==1.3.1
