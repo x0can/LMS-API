@@ -1,3 +1,6 @@
+from models.assignments import Assignment
+from models.quizzes import Quiz
+
 class Module:
     def __init__(self, title, lock_until):
         self.title = title
