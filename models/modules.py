@@ -10,7 +10,6 @@ class Module:
 
     def add_assignment(self, title, description, due_date):
         
-        
         assignment = Assignment(title, description, due_date)
         self.assignments.append(assignment)
 
