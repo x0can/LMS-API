@@ -32,9 +32,9 @@ if __name__ == "__main__":
     
     # Define assignments
     assignments = [
-        {"name": "Basics of Data Analysis", "points_possible": 100},
-        {"name": "Data Wrangling Assignment", "points_possible": 100},
-        {"name": "Visualization Assignment", "points_possible": 100}
+        "Basics of Data Analysis",
+        "Data Wrangling Assignment",
+        "Visualization Assignment"
     ]
     
     # Create assignments
