@@ -133,3 +133,13 @@ class CanvasUserManager:
                     print(f"Failed to enroll user {user_id}: {response.text}")
         except requests.exceptions.RequestException as e:
             print(f"Error occurred while enrolling user: {e}")    
+            
+    # Function to fetch enrolled users in a course
+    def fetch_enrolled_users(course_id):
+        url = f"{BASE_URL}/courses/{course_id}/enrollments"
+        response = requests.get(url, headers=HEADERS)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Failed to fetch enrollments for course {course_id}: {response.status_code}")
+            return []        
