@@ -143,3 +143,29 @@ class CanvasUserManager:
         else:
             print(f"Failed to fetch enrollments for course {course_id}: {response.status_code}")
             return []        
+        
+    # Function to generate the report
+    def generate_progress_report(course_id):
+        enrollments = fetch_enrolled_users(course_id)
+        progress_data = []
+
+        for enrollment in enrollments:
+            user_id = enrollment['user_id']
+            user_progress = fetch_user_progress(course_id, user_id)
+            if user_progress:
+                progress_data.append({
+                    "user_id": user_id,
+                    "requirement_count": user_progress.get("requirement_count", "N/A"),
+                    "requirement_completed_count": user_progress.get("requirement_completed_count", "N/A"),
+                    "next_requirement_url": user_progress.get("next_requirement_url", "N/A"),
+                    "completed_at": user_progress.get("completed_at", "N/A")
+                })
+
+        # Write the report to a CSV file
+        with open("course_progress_report.csv", "w", newline="") as csvfile:
+            fieldnames = ["user_id", "requirement_count", "requirement_completed_count", "next_requirement_url", "completed_at"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(progress_data)
+
+        print("Course progress report saved as 'course_progress_report.csv'")    
