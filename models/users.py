@@ -24,7 +24,7 @@ class CanvasUserManager:
             
             if response.status_code == 200:
                 permissions_info = response.json()
-                return permissions_info
+                return True
             else:
                return "You do not have permissions to perform this action", response.raise_for_status()
            
