@@ -1,11 +1,14 @@
 import requests
 
 class CanvasUserManager:
-    def __init__(self, username, email, role, account_id):
+    def __init__(self, username, email, role, account_id, headers, api_url,api_token):
         self.account_id = account_id
         self.username = username
         self.email = email
         self.role = role  # 'instructor' or 'student'
+        self.headers = headers
+        self.api_url = api_url
+        self.api_token = api_token
 
     def has_permission(self, action):
         
@@ -138,3 +141,34 @@ class CanvasUserManager:
                     print(f"Failed to enroll user {user_id}: {response.text}")
         except requests.exceptions.RequestException as e:
             print(f"Error occurred while enrolling user: {e}")    
+            
+            
+            
+    def fetch_user_progress(self, course_id, user_id):
+        try:
+            response = requests.get(
+                    f"{self.api_url}/courses/{course_id}/users/{user_id}/progress",
+                   headers=self.headers
+                )
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return {"error": f"Failed to fetch progress: {response.text}"}, response.status_code
+        except requests.exceptions.RequestException as e:
+            return {"error": str(e)}, 500            
+        
+    # Function to fetch enrolled users in a course
+    def fetch_enrolled_users(self,course_id):
+        
+        try:
+        
+            response = requests.get(f"{self.api_url}/courses/{course_id}/enrollments", headers=self.headers)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"Failed to fetch enrollments for course {course_id}: {response.status_code}")
+                return []   
+            
+        except requests.exceptions.RequestException as e:
+            return {"error": str(e)}, 500            
+                 
