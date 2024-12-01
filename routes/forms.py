@@ -1,10 +1,56 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, redirect
 from models.forms import FormProcess
 from config import Config
 
 form_routes = Blueprint('form_routes', __name__)
 
-form_handler = FormProcess(Config.FORM_API_URL, Config.FORM_TOKEN, Config.SECRET)
+
+form_handler = FormProcess(
+    Config.API_URL,
+    Config.FORM_CLIENT_ID,
+    Config.FORM_CLIENT_SECRET,
+    "http://localhost:5000/callback" # Always set this as '/callback'
+)
+
+
+@form_routes.route('/authorize')
+def authorize():
+    """
+    Automaticall redirects to the authorization URL to start the OAuth2 flow.
+    The redirect_uri is '/callback' here.
+    """
+    auth_url = form_handler.authorize_aouth2()
+
+    if auth_url:
+        return redirect(auth_url)  # Redirect the user to the authorization URL
+    return "Failed to generate authorization URL."
+
+
+@form_routes.route('/callback')
+def callback():
+    """
+    Handles the OAuth2 redirect callback and processes the authorization code.
+    The redirect_uri here will always be '/callback'.
+    """    
+    
+   
+        
+    auth_code = request.args.get('code')
+    if auth_code:
+        
+        form_handler.handle_redirect_callback_code(auth_code)
+
+        token_data = form_handler.get_oauth2_token()
+        
+        if token_data:
+            return f"Authorization successful. You can close this window.\n {jsonify(token_data)}"  # Return the full token data
+        else:
+            return "Failed to retrieve the access token.", 500
+    
+    else:
+        return "Authorization failed."
+        
+
 
 
 @form_routes.route('/submit_form', methods=['POST'])
