@@ -1,93 +1,123 @@
 from datetime import datetime, timedelta
-import json
-from models.modules import Module
 import requests
 
 
 class CourseManager:
-
     def __init__(self, api_url, api_token, account_id):
-        self.courses = []
-
-        # Initialize api credentials
-
         self.api_url = api_url
-        self.headers = {"Authorization": f"Bearer {api_token}"}
+        self.headers = {
+            "Authorization": f"Bearer {api_token}",
+            "Content-Type": "application/json"
+        }
         self.account_id = account_id
 
     def create_course(self, name, start_at, license, course_code):
-        course = Course(name, start_at, license, course_code)
-
-        # Send Course details to Canvas Via API
+        """Create a new course in Canvas."""
+        course_data = {
+            "course": {
+                "name": name,
+                "course_code": course_code,
+                "start_at": start_at,
+                "license": license
+            }
+        }
         try:
             response = requests.post(
                 f"{self.api_url}/accounts/{self.account_id}/courses",
                 headers=self.headers,
-                json=course
+                json=course_data
             )
-            if response.status_code == 200:
-                self.courses.append(course)
-                return response.json()
-
-            else:
-                # debugger
-                print(f"Failed to create course: {response.text}")
-                return {"error": response.text}, response.status_code
-
+            response.raise_for_status()
+            return response.json()
         except requests.exceptions.RequestException as e:
-            print(f"Error occurred while creating the course: {e}")
-            return {"error": str(e)}, 500
+            return None
 
+    def create_module(self, course_id, module_name):
+        """Create a module in the specified course."""
+        module_data = {"name": module_name}
+        try:
+            response = requests.post(
+                f"{self.api_url}/courses/{course_id}/modules",
+                headers=self.headers,
+                json=module_data
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            return None
 
-class Course:
-    def __init__(self, name, start_at, license, course_code):
-        self.name = name
-        self.start_at = start_at
-        self.course_code = course_code
-        self.license = license
-        self.modules = []
+    def create_assignment(self, course_id, name, module_id):
+        """Create an assignment and add it to a module."""
+        assignment_data = {"name": name}
+        try:
+            response = requests.post(
+                f"{self.api_url}/courses/{course_id}/assignments",
+                headers=self.headers,
+                json=assignment_data
+            )
+            response.raise_for_status()
+            assignment = response.json()
 
-    def add_module(self, course_id, module_name):
-        response = requests.post(
-            f"{self.api_url}/courses/{course_id}/modules",
-            headers=self.headers,
-            json={"name": module_name}
-        )
+            # Add the assignment to the module
+            self.add_item_to_module(
+                course_id, module_id, "assignments", assignment['id'])
+            return assignment
+        except requests.exceptions.RequestException as e:
+            return None
 
-        self.modules.append(response.json())
+    def create_quiz(self, course_id, title, module_id):
+        """Create a quiz and add it to a module."""
+        quiz_data = {"title": title}
+        try:
+            response = requests.post(
+                f"{self.api_url}/courses/{course_id}/quizzes",
+                headers=self.headers,
+                json=quiz_data
+            )
+            response.raise_for_status()
+            quiz = response.json()
 
-        return self.modules
+            # Add the quiz to the module
+            self.add_item_to_module(
+                course_id, module_id, "quizzes", quiz['id'])
+            return quiz
+        except requests.exceptions.RequestException as e:
+            return None
 
-    def configure_module_release_dates(self, course_id, start_date, interval_weeks):
-
-        release_dates = [
-            start_date + timedelta(weeks=i * interval_weeks) for i in range(len(self.modules))
-        ]
-
-        for module, unlock_date in zip(self.modules, release_dates):
-            module_id = module['id']
+    def configure_module_release_dates(self, course_id, module_id, release_date):
+        """Set the release date for a module."""
+        module_data = {
+            "unlock_at": release_date.isoformat()
+        }
+        try:
             response = requests.put(
                 f"{self.api_url}/courses/{course_id}/modules/{module_id}",
                 headers=self.headers,
-                json={"module": {"unlock_at": unlock_date.isoformat() + "Z"}}
+                json=module_data
             )
-            if response.status_code != 200:
-                raise Exception(
-                    f"Failed to update module {module_id}: {response.json}")
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            pass
 
-            module["unlock_at"] = unlock_date.isoformat() + "Z"
+    def configure_module_release_dates(self, course_id, module_ids, start_date, interval_weeks):
+        """Set the release date for a module. based on interval of number of weeks"""
 
-            print(response.json())
+        release_dates = [
+            start_date + timedelta(weeks=i * interval_weeks) for i in range(len(module_ids))
+        ]
+        try:
+            for module_id, unlock_date in zip(module_ids, release_dates):
 
-    # def to_dict(self):
-    #     """Converts the course object to a dictionary"""
-    #     return {
-    #         'title': self.name,
-    #         'start_date': self.start_at,  # Converting datetime to string
-    #         # Convert modules to dict
-    #         'modules': [module.to_dict() for module in self.modules]
-    #     }
+                module_data = {
+                    "unlock_at": unlock_date.isoformat()
+                }
 
-    # def __repr__(self):
-    #     """Return a JSON-like string representation of the course object"""
-    #     return json.dumps(self.to_dict(), indent=4)  # JSON string with indentation for readability
+                response = requests.put(
+                    f"{self.api_url}/courses/{course_id}/modules/{module_id}",
+                    headers=self.headers,
+                    json=module_data
+                )
+            response.raise_for_status()
+
+        except requests.exceptions.RequestException as e:
+            pass

@@ -1,6 +1,12 @@
 from flask import Blueprint, request, jsonify
+from datetime import datetime
 
 course_routes = Blueprint('course_routes', __name__)
+
+from models.courses import CourseManager
+
+
+course_manager = CourseManager
 
 @course_routes.route('/api/create_course', methods=['POST'])
 def create_course():
@@ -14,7 +20,7 @@ def create_course():
         return jsonify({"error": "Missing required fields"}), 400
 
     try:
-        course = manager.create_course(course_name, course_code, start_date)
+        course = course_manager.create_course(course_name, course_code, start_date)
         return jsonify(course), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -29,7 +35,7 @@ def create_modules():
         return jsonify({"error": "Missing required fields"}), 400
 
     try:
-        module_ids = manager.create_modules(course_id, modules)
+        module_ids = course_manager.create_modules(course_id, modules)
         return jsonify({"module_ids": module_ids}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -44,7 +50,7 @@ def create_assignments():
         return jsonify({"error": "Missing required fields"}), 400
 
     try:
-        manager.create_assignments(course_id, assignments)
+        course_manager.create_assignments(course_id, assignments)
         
         return jsonify({"message": "Assignments created successfully"}), 201
     except Exception as e:
@@ -60,7 +66,7 @@ def create_quizzes():
         return jsonify({"error": "Missing required fields"}), 400
 
     try:
-        manager.create_quizzes(course_id, quizzes)
+        course_manager.create_quizzes(course_id, quizzes)
         return jsonify({"message": "Quizzes created successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -69,29 +75,16 @@ def create_quizzes():
 def configure_module_release_dates():
     data = request.json
     course_id = data.get("course_id")
-    module_ids = data.get("module_ids")
+    module_id = data.get("module_id")
     start_date = data.get("start_date")
-    interval_weeks = data.get("interval_weeks", 1)
 
-    if not all([course_id, module_ids, start_date]):
-        return jsonify({"error": "Missing required fields"}), 400
+    
 
     try:
-        start_date = datetime.fromisoformat(start_date)  # Parse ISO 8601 date format
-        manager.configure_module_release_dates(course_id, module_ids, start_date, interval_weeks)
+        start_date = datetime.fromisoformat(start_date) 
+        course_manager.configure_module_release_dates(course_id, module_id, start_date,1)
         return jsonify({"message": "Module release dates configured successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-@course_routes.route("/courses/<int:course_id>", methods=["GET"])
-def get_course(course_id):
-    return jsonify(user_manager.get_course(course_id))
-
-@course_routes.route("/users", methods=["GET"])
-def get_user():
-    user_identifier = request.args.get("user_identifier")
-    if not user_identifier:
-        return jsonify({"error": "User identifier is required"}), 400
-    return jsonify(user_manager.get_user_info(user_identifier))
 
