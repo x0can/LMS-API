@@ -10,7 +10,6 @@ from routes import configure_routes
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# user_manager = UserModel(API_URL, API_TOKEN, ACCOUNT_ID)
 
 
 # Register routes

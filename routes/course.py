@@ -1,12 +1,14 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
-
-course_routes = Blueprint('course_routes', __name__)
-
+from config import Config
 from models.courses import CourseManager
 
 
-course_manager = CourseManager
+course_routes = Blueprint('course_routes', __name__)
+
+
+
+course_manager = CourseManager(Config.API_URL, Config.API_TOKEN, Config.ACCOUNT_ID)
 
 @course_routes.route('/api/create_course', methods=['POST'])
 def create_course():
