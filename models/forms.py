@@ -1,20 +1,38 @@
 import requests
-from requests.auth import HTTPBasicAuth
 
 
 class FormProcess:
-    def __init__(self, api_url, client_id, client_secret, redirect_uri, code):
+    def __init__(self, api_url, client_id, client_secret, redirect_uri, code=None):
         self.api_url = api_url
         self.client_id = client_id
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
         self.code = code
 
+    def handle_redirect_callback_code(self, code):
+        self.code = code
+        return code
+
+    def authorize_aouth2(self):
+        
+        endpoint = f"{self.api_url}/api/v2/oauth2/authorize"
+        try:
+            # Construct the authorization URL
+            auth_url = f"{endpoint}?client_id={self.client_id}&redirect_uri={self.redirect_uri}&response_type=code"
+            return auth_url
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error generating OAuth2 token: {e}")
+            return None
+
     def get_oauth2_token(self):
         """
         Generates an OAuth2 token using the Formstack API.
         """
 
+        if not self.code:
+            return "Authorization code is missing. Please authorize first."
+        
         # Define endpoint and payload
         endpoint = f"{self.api_url}/oauth2/token"
         payload = {
