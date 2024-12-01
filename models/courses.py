@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 import requests
 
 
@@ -14,7 +14,6 @@ class CourseManager:
 
     def create_course(self, name, start_at, license, course_code):
         
-        self.user._check_permissions('create_course')
         
         """Create a new course in Canvas."""
         course_data = {
@@ -38,7 +37,6 @@ class CourseManager:
 
     def create_module(self, course_id, module_name):
         
-        self.user._check_permissions('add_module')
 
         
         """Create a module in the specified course."""
@@ -56,7 +54,6 @@ class CourseManager:
 
     def create_assignment(self, course_id, name, module_id):
         
-        self.user._check_permissions('add_assignment')
 
         
         """Create an assignment and add it to a module."""
@@ -79,8 +76,6 @@ class CourseManager:
 
     def create_quiz(self, course_id, title, module_id):
         
-        self.user._check_permissions('add_quizz')
-
         
         """Create a quiz and add it to a module."""
         quiz_data = {"title": title}
@@ -102,8 +97,6 @@ class CourseManager:
 
     def configure_module_release_dates(self, course_id, module_id, release_date):
         
-        self.user._check_permissions('edit_course')
-
         
         """Set the release date for a module."""
         module_data = {

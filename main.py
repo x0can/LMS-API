@@ -12,7 +12,7 @@ app.config.from_object(Config)
 
 
 
-# Register routes
+# # Register routes
 configure_routes(app)
 
 

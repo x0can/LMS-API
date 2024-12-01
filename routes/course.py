@@ -2,16 +2,20 @@ from flask import Blueprint, request, jsonify
 from datetime import datetime
 from config import Config
 from models.courses import CourseManager
+from models.users import CanvasUserManager
 
 
 course_routes = Blueprint('course_routes', __name__)
 
+user_manager = CanvasUserManager(Config.API_URL, Config.API_TOKEN, Config.ACCOUNT_ID)
+course_manager = CourseManager(Config.API_URL, Config.API_TOKEN, Config.ACCOUNT_ID, user=user_manager)
 
-
-course_manager = CourseManager(Config.API_URL, Config.API_TOKEN, Config.ACCOUNT_ID)
 
 @course_routes.route('/api/create_course', methods=['POST'])
 def create_course():
+    
+    user_manager.get_user_permissions(permissions=['manage_courses_admin'])
+    
     
     data = request.json
     course_name = data.get("course_name")
@@ -27,8 +31,12 @@ def create_course():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @course_routes.route('/api/create_modules', methods=['POST'])
 def create_modules():
+    
+    user_manager.get_user_permissions(permissions=['manage_courses_admin'])
+
     data = request.json
     course_id = data.get("course_id")
     modules = data.get("modules")
@@ -41,9 +49,12 @@ def create_modules():
         return jsonify({"module_ids": module_ids}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 
 @course_routes.route('/api/create_assignments', methods=['POST'])
 def create_assignments():
+    user_manager.get_user_permissions(permissions=['manage_courses_admin'])
+
     data = request.json
     course_id = data.get("course_id")
     assignments = data.get("assignments")
@@ -60,6 +71,9 @@ def create_assignments():
 
 @course_routes.route('/api/create_quizzes', methods=['POST'])
 def create_quizzes():
+    user_manager.get_user_permissions(permissions=['manage_courses_admin'])
+    
+    
     data = request.json
     course_id = data.get("course_id")
     quizzes = data.get("quizzes")
@@ -73,8 +87,11 @@ def create_quizzes():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @course_routes.route('/api/configure_module_release_dates', methods=['POST'])
 def configure_module_release_dates():
+    user_manager.get_user_permissions(permissions=['manage_courses_admin'])
+
     data = request.json
     course_id = data.get("course_id")
     module_id = data.get("module_id")
