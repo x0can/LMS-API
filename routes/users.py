@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from users.model import CanvasUserManager
+from models.users import CanvasUserManager
 from config import Config
 
 
