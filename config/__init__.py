@@ -10,6 +10,5 @@ class Config:
     ACCOUNT_ID = os.getenv("ACCOUNT_ID")
     FORM_API_URL = os.getenv('FORM_API_URL')
     FORM_CLIENT_ID=os.getenv('FORM_CLIENT_ID')
-    CLIENT_CODE = os.getenv('FORM_KEY')
     FORM_CLIENT_SECRET = os.getenv('FORM_SECRET')
     REDIRECT_URL=os.getenv('REDIRECT_URL')
