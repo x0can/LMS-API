@@ -2,14 +2,14 @@ Moringa School Assessment
 ==
 
 
- [Question 1](/QktFCad6RBqswYR39CcDHw)
+ [Question 1](/question1)
 ---
 
-[Question 2](/N6PeHBwBQoO3zoGEfwx4aQ)
+[Question 2](/question2)
 ---
 
-[Question 3](/n-pXxr9SQ4ihREXyBAMrLw)
+[Question 3](/question3)
 ---
 
-[Question 4](/Fhi0pJ6xSuuQu7DaX_nsfQ)
+[Question 4](/question4)
 ---
