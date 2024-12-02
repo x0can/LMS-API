@@ -72,51 +72,54 @@ class CanvasUserManager:
             raise Exception(f"Error creating user: {str(e)}")
 
     def enroll_user(self, course_id, data, role="StudentEnrollment", start_at=None, end_at=None):
-            """Enroll users in a specific course."""
-            try:
-                if not self.get_course(course_id):
-                    raise Exception(f"Course with ID {course_id} not found.")
-                
-                # Extract the user identifier and possibly other user details
-                user_identifier = data.get("user_identifier")
-                if not user_identifier:
-                    raise Exception("User identifier is required.")
-                
-                # Get user info or create a new user
-                user_info = self.get_user_info(user_identifier)
+        """Enroll users in a specific course."""
+        try:
+            if not self.get_course(course_id):
+                raise Exception(f"Course with ID {course_id} not found.")
+
+            # Extract the user identifier and possibly other user details
+            user_identifier = data.get("user_identifier")
+            if not user_identifier:
+                raise Exception("User identifier is required.")
+
+            # Get user info or create a new user
+            user_info = self.get_user_info(user_identifier)
+            if not user_info:
+                user_info = self.create_user(user_identifier, user_identifier)
                 if not user_info:
-                    user_info = self.create_user(user_identifier, user_identifier)
-                    if not user_info:
-                        print(f"Failed to create user {user_identifier}. Skipping...")
-                        return
-                
-                user_id = user_info["id"]
+                    print(
+                        f"Failed to create user {user_identifier}. Skipping...")
+                    return
 
-                # Set default enrollment start time if not provided
-                start_at = start_at or datetime.utcnow().isoformat()
-                # Handle default end date if not provided
-                end_at = end_at or datetime.utcnow().replace(year=datetime.utcnow().year + 1).isoformat()
+            user_id = user_info["id"]
 
-                enrollment_data = {
-                    "enrollment": {
-                        "user_id": user_id,
-                        "type": role,
-                        "start_at": start_at,
-                        "end_at": end_at,
-                        "enrollment_state": "active",
-                    }
+            # Set default enrollment start time if not provided
+            start_at = start_at or datetime.utcnow().isoformat()
+            # Handle default end date if not provided
+            end_at = end_at or datetime.utcnow().replace(
+                year=datetime.utcnow().year + 1).isoformat()
+
+            enrollment_data = {
+                "enrollment": {
+                    "user_id": user_id,
+                    "type": role,
+                    "start_at": start_at,
+                    "end_at": end_at,
+                    "enrollment_state": "active",
                 }
+            }
 
-                # Send the enrollment request
-                response = requests.post(
-                    f"{self.api_url}/courses/{course_id}/enrollments",
-                    headers=self.headers,
-                    json=enrollment_data,
-                )
-                response.raise_for_status()
-                print(f"User {user_id} successfully enrolled in course {course_id}.")
-            except requests.exceptions.RequestException as e:
-                raise Exception(f"Error enrolling user: {str(e)}")
+            # Send the enrollment request
+            response = requests.post(
+                f"{self.api_url}/courses/{course_id}/enrollments",
+                headers=self.headers,
+                json=enrollment_data,
+            )
+            response.raise_for_status()
+            print(
+                f"User {user_id} successfully enrolled in course {course_id}.")
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Error enrolling user: {str(e)}")
 
     def fetch_user_progress(self, course_id, user_id):
         """Fetch progress of a specific user in a course."""
