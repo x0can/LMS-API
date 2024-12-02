@@ -11,6 +11,25 @@ class CourseManager:
         }
         self.account_id = account_id
         self.user = user
+        
+    def get_user_permissions(self, account_id, permissions):   
+        try:
+            # Prepare the data payload for permissions
+            data = {f'permissions[]={permission}' for permission in permissions}
+
+            # Fetch user permissions using Canvas API
+            response = requests.post(
+                f"{self.api_url}/accounts/{account_id}/permissions",
+                headers=self.headers,
+                data=data
+            )
+            
+            if response.status_code == 200:
+                return True
+            else:
+               return False, response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+                return False
 
     def create_course(self, name, start_at, license, course_code):
         
@@ -37,7 +56,6 @@ class CourseManager:
 
     def create_module(self, course_id, module_name):
         
-
         
         """Create a module in the specified course."""
         module_data = {"name": module_name}
@@ -51,6 +69,26 @@ class CourseManager:
             return response.json()
         except requests.exceptions.RequestException as e:
             return None
+
+
+    def add_item_to_module(self, course_id, module_id, item_type, item_id):
+        item_data = {
+            "type": item_type,
+            "content_id": item_id
+        }
+        try:
+            response = requests.post(
+                f"{self.api_url}/courses/{course_id}/modules/{module_id}/items",
+                headers=self.headers,
+                json=item_data
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            return None
+
+
+
 
     def create_assignment(self, course_id, name, module_id):
         

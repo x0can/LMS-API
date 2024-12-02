@@ -41,14 +41,14 @@ def create_modules():
     if permissions:
         data = request.json
         course_id = data.get("course_id")
-        modules = data.get("modules")
+        module_name = data.get("module_name")
 
-        if not all([course_id, modules]):
+        if not all([course_id, module_name]):
             return jsonify({"error": "Missing required fields"}), 400
 
         try:
-            module_ids = course_manager.create_modules(course_id, modules)
-            return jsonify({"module_ids": module_ids}), 201
+            module = course_manager.create_modules(course_id, module_name)
+            return jsonify(module), 201
         except Exception as e:
             return jsonify({"error": str(e)}), 500
         
@@ -62,13 +62,14 @@ def create_assignments():
     if permissions:
         data = request.json
         course_id = data.get("course_id")
-        assignments = data.get("assignments")
+        assignment_name = data.get("assignment_name")
+        assignment_name = data.get("assignment_name")
 
-        if not all([course_id, assignments]):
+        if not all([course_id, assignment_name]):
             return jsonify({"error": "Missing required fields"}), 400
 
         try:
-            course_manager.create_assignments(course_id, assignments)
+            course_manager.create_assignments(course_id, assignment_name)
             
             return jsonify({"message": "Assignments created successfully"}), 201
         except Exception as e:
