@@ -1,178 +1,125 @@
 import requests
 
+
 class CanvasUserManager:
-    def __init__(self,api_url, api_token, account_id):
+    def __init__(self, api_url, api_token, account_id):
         self.account_id = account_id
         self.headers = {
             "Authorization": f"Bearer {api_token}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
         self.api_url = api_url
-        self.api_token = api_token
-    
-    def get_user_permissions(self, account_id, permissions):   
-        try:
-            # Prepare the data payload for permissions
-            data = {f'permissions[]={permission}' for permission in permissions}
 
-            # Fetch user permissions using Canvas API
+    def get_user_permissions(self, account_id, permissions):
+        """Check if the user has the specified permissions."""
+        try:
+            data = {f"permissions[]={permission}" for permission in permissions}
             response = requests.post(
                 f"{self.api_url}/accounts/{account_id}/permissions",
                 headers=self.headers,
-                data=data
+                data=data,
             )
-            
-            if response.status_code == 200:
-                permissions_info = response.json()
-                return True
-            else:
-               return "You do not have permissions to perform this action", response.raise_for_status()
-           
+            response.raise_for_status()
+            permissions_info = response.json()
+            return all(permissions_info.get(permission, False) for permission in permissions)
         except requests.exceptions.RequestException as e:
-            print(f"Error occurred while fetching user permissions: {e}")
-            return None
-        
+            raise Exception(f"Failed to verify user permissions: {str(e)}")
+
     def get_user_info(self, user_identifier):
-            try:
-                # Fetch user details using Canvas API
-                response = requests.get(
-                    f"{self.api_url}/accounts/{self.account_id}/users",
-                    headers=self.headers,
-                    params={"search_term": user_identifier}  # Username or email
-                )
-                if response.status_code == 200:
-                    users = response.json()
-                    if users:
-                        return users[0]  # Assuming the first user is the correct one
-                    else:
-                        print(f"No user found with identifier: {user_identifier}")
-                        return None
-                else:
-                    response.raise_for_status()
-            except requests.exceptions.RequestException as e:
-                print(f"Error occurred while fetching user info: {e}")
-                return None    
-   
-    #fetch course details
+        """Fetch user information by username or email."""
+        try:
+            response = requests.get(
+                f"{self.api_url}/accounts/{self.account_id}/users",
+                headers=self.headers,
+                params={"search_term": user_identifier},
+            )
+            response.raise_for_status()
+            users = response.json()
+            return users[0] if users else None
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Failed to fetch user info: {str(e)}")
+
     def get_course(self, course_id):
+        """Fetch details for a specific course."""
         try:
             response = requests.get(
                 f"{self.api_url}/courses/{course_id}",
-                headers=self.headers
+                headers=self.headers,
             )
-            # If course is found, return the course details
-            if response.status_code == 200:
-                return response.json()
-            # If course is not found (404)
-            elif response.status_code == 404:
-                print(f"Course with ID {course_id} not found")
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.HTTPError as e:
+            if response.status_code == 404:
                 return {"error": f"Course with ID {course_id} not found."}, 404
-            # If some other error occurs, raise an exception
-            else:
-                response.raise_for_status()
+            raise Exception(f"Error fetching course: {response.text}")
         except requests.exceptions.RequestException as e:
-            print(f"Error occurred while fetching course: {e}")
-            return {"error": str(e)}, 500
-            
-    # Create a new user if they do not already exist
+            raise Exception(f"Error fetching course: {str(e)}")
+
     def create_user(self, name, email):
+        """Create a new user in Canvas."""
         try:
-            user_data = {
-                "user": {
-                    "name": name,
-                    "pseudonym": {
-                        "unique_id": email
-                    }
-                }
-            }
+            user_data = {"user": {"name": name, "pseudonym": {"unique_id": email}}}
             response = requests.post(
                 f"{self.api_url}/accounts/{self.account_id}/users",
                 headers=self.headers,
-                json=user_data
+                json=user_data,
             )
-            if response.status_code == 200:
-                return response.json()  # Return user data if creation is successful
-            else:
-                print(f"Failed to create user: {response.text}")
-                return None
+            response.raise_for_status()
+            return response.json()
         except requests.exceptions.RequestException as e:
-            print(f"Error occurred while creating user: {e}")
-            return None
-        
-        
-    def enroll_user(self, course_id, user_identifiers, role="StudentEnrollment"):
-        try:
-            # Verify  the course
-            course = self.get_course(course_id)
-            if not course:
-                print(f"Course {course_id} creation failed.")
-                return
+            raise Exception(f"Error creating user: {str(e)}")
 
-            # Verify user information
+    def enroll_user(self, course_id, user_identifiers, role="StudentEnrollment"):
+        """Enroll users in a specific course."""
+        try:
+            if not self.get_course(course_id):
+                raise Exception(f"Course with ID {course_id} not found.")
+
             for user_identifier in user_identifiers:
-            # Verify user information
                 user_info = self.get_user_info(user_identifier)
                 if not user_info:
-                    print(f"User {user_identifier} not found....")
-
-                    # You can comment out this part if you do not have authority to add new users
-                    # If user doesn't exist, create them
                     user_info = self.create_user(user_identifier, user_identifier)
-
-                    # You can comment out this part if you do not have authority to add new users
                     if not user_info:
                         print(f"Failed to create user {user_identifier}. Skipping...")
                         continue
 
-                user_id = user_info['id']  # Extract the user ID from the user info
-
-                # Define enrollment data
+                user_id = user_info["id"]
                 enrollment_data = {
-                    "user_id": user_id,
-                    "type": role,
-                    "enrollment_state": "active"  # Enroll immediately
+                    "enrollment": {
+                        "user_id": user_id,
+                        "type": role,
+                        "enrollment_state": "active",
+                    }
                 }
-
-                # Send the POST request to enroll the user
                 response = requests.post(
                     f"{self.api_url}/courses/{course_id}/enrollments",
                     headers=self.headers,
-                    data=enrollment_data
+                    json=enrollment_data,
                 )
-                if response.status_code == 200:
-                    print(f"User {user_id} successfully enrolled in course {course_id}.")
-                else:
-                    print(f"Failed to enroll user {user_id}: {response.text}")
+                response.raise_for_status()
+                print(f"User {user_id} successfully enrolled in course {course_id}.")
         except requests.exceptions.RequestException as e:
-            print(f"Error occurred while enrolling user: {e}")    
-            
-            
-            
+            raise Exception(f"Error enrolling user: {str(e)}")
+
     def fetch_user_progress(self, course_id, user_id):
+        """Fetch progress of a specific user in a course."""
         try:
             response = requests.get(
-                    f"{self.api_url}/courses/{course_id}/users/{user_id}/progress",
-                   headers=self.headers
-                )
-            if response.status_code == 200:
-                return response.json()
-            else:
-                return {"error": f"Failed to fetch progress: {response.text}"}, response.status_code
+                f"{self.api_url}/courses/{course_id}/users/{user_id}/progress",
+                headers=self.headers,
+            )
+            response.raise_for_status()
+            return response.json()
         except requests.exceptions.RequestException as e:
-            return {"error": str(e)}, 500            
-        
-    # Function to fetch enrolled users in a course
-    def fetch_enrolled_users(self,course_id):
-        
+            raise Exception(f"Error fetching user progress: {str(e)}")
+
+    def fetch_enrolled_users(self, course_id):
+        """Fetch all enrolled users in a course."""
         try:
-        
-            response = requests.get(f"{self.api_url}/courses/{course_id}/enrollments", headers=self.headers)
-            if response.status_code == 200:
-                return response.json()
-            else:
-                print(f"Failed to fetch enrollments for course {course_id}: {response.status_code}")
-                return []   
-            
+            response = requests.get(
+                f"{self.api_url}/courses/{course_id}/enrollments", headers=self.headers
+            )
+            response.raise_for_status()
+            return response.json()
         except requests.exceptions.RequestException as e:
-            return {"error": str(e)}, 500            
-                 
+            raise Exception(f"Error fetching enrolled users: {str(e)}")
