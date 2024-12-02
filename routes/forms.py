@@ -9,11 +9,11 @@ form_handler = FormProcess(
     Config.API_URL,
     Config.FORM_CLIENT_ID,
     Config.FORM_CLIENT_SECRET,
-    "http://localhost:5000/callback" # Always set this as '/callback'
+    "http://localhost:5000/api/callback" # Always set this as '/callback'
 )
 
 
-@form_routes.route('/authorize')
+@form_routes.route('/api/authorize')
 def authorize():
     """
     Automaticall redirects to the authorization URL to start the OAuth2 flow.
@@ -25,11 +25,10 @@ def authorize():
     return "Failed to generate authorization URL."
 
 
-@form_routes.route('/callback')
+@form_routes.route('/api/callback')
 def callback():
     """
     Handles the OAuth2 redirect callback and processes the authorization code.
-    The redirect_uri here will always be '/callback'.
     """    
     
    
@@ -52,7 +51,7 @@ def callback():
 
 
 
-@form_routes.route('/submit_form', methods=['POST'])
+@form_routes.route('/api/submit_form', methods=['POST'])
 def submit_form():
     data = request.json
 

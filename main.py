@@ -5,12 +5,17 @@ from flask import Flask
 from routes import configure_routes
 from config import Config
 from db.student_queries import get_student_performance
+from flask_cors import CORS
+
+
+
 
 
 # Initialize Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
 
+CORS(app, resources=r'/api/*')
 
 
 
