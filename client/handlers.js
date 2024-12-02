@@ -59,4 +59,49 @@ const submitForm = async (formData, url) => {
   }
 };
 
-export { submitForm };
+
+
+const form = document.getElementById("submitForm");
+
+const url = "localhost:5000/api/submit_form";
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const formData = {
+    name: form.name.value,
+    type: form.type.value,
+    first_name: form.first_name.value,
+    last_name: form.last_name.value,
+    email: form.email.value,
+    gender: form.gender.value,
+    from_location: form.from_location.value,
+    source: form.source.value,
+    employment_status: form.employment_status.value,
+    start_date: form.start_date.value,
+    education_level: form.education_level.value,
+    institution: form.institution.value,
+    area_of_study: form.area_of_study.value,
+    professional_background: form.professional_background.value,
+    industry: form.industry.value,
+    kin_name: form.kin_name.value,
+    kin_phone: form.kin_phone.value,
+    kin_email: form.kin_email.value,
+    consent: form.consent.checked,
+  };
+
+  try {
+    const result = await submitForm(formData);
+
+    if ({error} = result){
+      
+    }
+    alert("Form submitted successfully!");
+
+    console.log("Form response:", result);
+  } catch (error) {
+    alert("Error submitting form. Please try again.");
+  }
+  
+});
+
