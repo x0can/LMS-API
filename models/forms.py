@@ -3,14 +3,12 @@ import requests
 
 class FormProcess:
     def __init__(self, api_url, client_id, client_secret, redirect_uri, code=None):
-        print('Initializing')
         self.api_url = api_url
         self.client_id = client_id
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
         self.code = code
 
-        print(api_url)
 
     def handle_redirect_callback_code(self, code):
         self.code = code
@@ -25,7 +23,6 @@ class FormProcess:
             return auth_url
 
         except requests.exceptions.RequestException as e:
-            print(f"Error generating OAuth2 token: {e}")
             raise Exception(f"Error generating OAuth2 token {str(e)}")
 
     def get_oauth2_token(self):
@@ -57,7 +54,6 @@ class FormProcess:
             token_data = response.json()
             return token_data.get("access_token")
         except requests.exceptions.RequestException as e:
-            print(f"Error generating OAuth2 token: {e}")
             raise Exception(f"Error generating OAuth2 token {str(e)}")
 
     def submit_formstack_application(self, form_id, applicant_data):
@@ -67,7 +63,6 @@ class FormProcess:
         # Endpoint for form submissions
         endpoint = f"{self.api_url}/form/{form_id}/submission"
 
-        print(self.api_url)
         try:
 
             # get access_token
