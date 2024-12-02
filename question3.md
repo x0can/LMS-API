@@ -70,6 +70,22 @@ FORM_CLIENT_SECRET=YOUR_FORM_CLIENT_SECRET
 REDIERCT_URL=REDIERCT_URL
 ```
 
+To follow along
+
+git clone this repository: https://github.com/x0can/LMS-API
+
+Navigate to formstack admin page and obtain the above environment variables
+
+Next 
+
+`pip3 install -r requirements.txt`
+
+`python3 main.py`
+
+On your browser send this request to obtain redirect_url for generating `auth token`
+```
+GET [your-local-url](http://127.0.0.1:5000)/api/authorize
+```
 
 
 
@@ -111,31 +127,46 @@ POST /api/v2/oauth2/token
 
 models.forms.py
 ```python=-
-class FormProcess:
+import requests
 
-...
+
+class FormProcess:
+    def __init__(self, api_url, client_id, client_secret, redirect_uri, code=None,access_token=None):
+        self.api_url = api_url
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.redirect_uri = redirect_uri
+        self.code = code
+        self.access_token=access_token
+        self.headers = {
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json"
+            }
+
 
     def handle_redirect_callback_code(self, code):
-            self.code = code
-            return code
+        self.code = code
+        return code
 
     def authorize_aouth2(self):
+
         endpoint = f"{self.api_url}/api/v2/oauth2/authorize"
         try:
             # Construct the authorization URL
-            auth_url = f"{endpoint}?client_id={self.client_id}&redirect_uri {self.redirect_uri}&response_type=code"
+            auth_url = f"{endpoint}?client_id={self.client_id}&redirect_uri={self.redirect_uri}&response_type=code"
             return auth_url
+
         except requests.exceptions.RequestException as e:
-            print(f"Error generating OAuth2 token: {e}")
-            return None
-    
+            raise Exception(f"Error generating OAuth2 token {str(e)}")
+
     def get_oauth2_token(self):
         """
         Generates an OAuth2 token using the Formstack API.
         """
+
         if not self.code:
             return "Authorization code is missing. Please authorize first."
-        
+
         # Define endpoint and payload
         endpoint = f"{self.api_url}/oauth2/token"
         payload = {
@@ -145,18 +176,22 @@ class FormProcess:
             "redirect_uri": self.redirect_uri,
             "code": self.code
         }
+
         try:
             # Send POST request to get the token
             response = requests.post(endpoint, data=payload)
+
             # Raise an error if the request failed
             response.raise_for_status()
+
             # Return the access token if successful
             token_data = response.json()
-            return token_data.get("access_token")
+            access_token = token_data.get('access_token')
+            self.access_token = access_token
+            
+            return self.access_token
         except requests.exceptions.RequestException as e:
-            print(f"Error generating OAuth2 token: {e}")
-            return None
-
+            raise Exception(f"Error generating OAuth2 token {str(e)}")
 ```
 
 routes.forms.py
@@ -170,18 +205,17 @@ form_routes = Blueprint('form_routes', __name__)
 
 
 form_handler = FormProcess(
-    Config.API_URL,
+    Config.FORM_API_URL,
     Config.FORM_CLIENT_ID,
     Config.FORM_CLIENT_SECRET,
-    "http://localhost:5000/callback" # Always set this as '/callback'
+    "http://localhost:5000/api/callback"  # Always set this as '/callback'
 )
 
 
-@form_routes.route('/authorize')
+@form_routes.route('/api/authorize')
 def authorize():
     """
     Auto redirects to the authorization URL to start the OAuth2 flow.
-    The redirect_uri is '/callback' here.
     """
     auth_url = form_handler.authorize_aouth2()
 
@@ -191,28 +225,46 @@ def authorize():
 
 
 
-@form_routes.route('/callback')
+@form_routes.route('/api/callback')
 def callback():
     """
     Handles the OAuth2 redirect callback and processes the authorization code.
-    The redirect_uri here will always be '/callback'.
-    """    
-        
-    auth_code = request.args.get('code')
-    if auth_code:
-        
-        form_handler.handle_redirect_callback_code(auth_code)
+    """
 
-        token_data = form_handler.get_oauth2_token()
-        
-        if token_data:
-            return f"Authorization successful. You can close this window.\n {jsonify(token_data)}"  # Return the full token data
+    # Check if the request is a GET or POST request
+    if request.method == 'GET':
+        # Handle query parameters (like 'code')
+        auth_code = request.args.get('code')
+        if auth_code:
+            form_handler.handle_redirect_callback_code(auth_code)
+
+            token_data = form_handler.get_oauth2_token()
+
+            if token_data:
+                # Return the full token data
+                return f"Authorization successful. You can close this window.\n {jsonify(token_data)}"
+            else:
+                return "Failed to retrieve the access token.", 500
         else:
-            return "Failed to retrieve the access token.", 500
-    
-    else:
-        return "Authorization failed."
-        
+            return "Authorization failed."
+
+    elif request.method == 'POST':
+        # Handle JSON payload
+        data = request.get_json()
+
+        auth_code = data.get('code') if data else None
+        if auth_code:
+            form_handler.handle_redirect_callback_code(auth_code)
+
+            token_data = form_handler.get_oauth2_token()
+
+            if token_data:
+                # Return the full token data
+                return jsonify(token_data)
+            else:
+                return "Failed to retrieve the access token.", 500
+        else:
+            return "Authorization failed."
 
 
 
@@ -274,30 +326,34 @@ routes.forms.py
 ```python=
 
 ...
-@form_routes.route('/submit_form', methods=['POST'])
+@form_routes.route('/api/submit_form', methods=['POST'])
 def submit_form():
     data = request.json
 
     # Validate the required fields in the form data
     required_fields = [
+        "form_id"
         "name",
         "type",
-        "first_name", "last_name", "email", "gender", "from_location", "source", 
-        "employment_status", "start_date", "education_level", "institution", 
-        "area_of_study", "professional_background", "industry", "kin_name", 
+        "first_name", "last_name", "email", "gender", "from_location", "source",
+        "employment_status", "start_date", "education_level", "institution",
+        "area_of_study", "professional_background", "industry", "kin_name",
         "kin_phone", "kin_email", "consent"
     ]
-    
+
     missing_fields = [field for field in required_fields if field not in data]
 
-    
     if missing_fields:
         return jsonify({"error": f"Missing required fields. {missing_fields}"}), 400
 
-    # Call the submit_form_data method to send the data
-    response_data, status_code = form_handler.submit_form_data(data)
+    try:
+        # Call the submit_form_data method to send the data
+        response_data, status_code = form_handler.submit_formstack_application(
+            data['form_id'], data)
 
-    return jsonify(response_data), status_code
+        return jsonify(response_data), status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 ```
@@ -307,7 +363,7 @@ def submit_form():
 ### How to Validate the start date
 
 
-Validate data before sending the `POST` request to the API endpoint `/submit-form` above using JavaScript
+Validate data before sending the `POST` request to the API endpoint `/api/submit-form` above using JavaScript
 
 process
 
@@ -379,7 +435,62 @@ const submitForm = async (formData, url) => {
   }
 };
 
-export { submitForm };
+
+
+function handle_form() {
+  const form = document.getElementById("submitForm");
+
+  const url = "http://127.0.0.1:5000/api/submit_form";
+
+  const formStatus = document.getElementById("formStatus");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = {
+      form_id: 'F1O1',
+      name: form.name.value,
+      type: form.type.value,
+      first_name: form.first_name.value,
+      last_name: form.last_name.value,
+      email: form.email.value,
+      gender: form.gender.value,
+      from_location: form.from_location.value,
+      source: form.source.value,
+      employment_status: form.employment_status.value,
+      start_date: form.start_date.value,
+      education_level: form.education_level.value,
+      institution: form.institution.value,
+      area_of_study: form.area_of_study.value,
+      professional_background: form.professional_background.value,
+      industry: form.industry.value,
+      kin_name: form.kin_name.value,
+      kin_phone: form.kin_phone.value,
+      kin_email: form.kin_email.value,
+      consent: form.consent.checked,
+    };
+
+    try {
+      const result = await submitForm(url, formData);
+
+      const { error } = result;
+
+      if (error) {
+        formStatus.textContent = error;
+        formStatus.style.color = "#F44336";
+      } else {
+        formStatus.textContent = "Form submitted successfully!";
+        formStatus.style.color = "green";
+      }
+    } catch (error) {
+      console.log(error.message);
+      formStatus.textContent = error.message;
+      formStatus.style.color = "#F44336";
+    }
+  });
+}
+
+handle_form();
 
 
 ```
