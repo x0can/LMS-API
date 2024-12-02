@@ -9,7 +9,7 @@ form_handler = FormProcess(
     Config.FORM_API_URL,
     Config.FORM_CLIENT_ID,
     Config.FORM_CLIENT_SECRET,
-    "http://localhost:5000/api/callback"  # Always set this as '/callback'
+    "http://localhost:5000/api/callback"  # Always set this as '/api/callback'
 )
 
 
@@ -25,6 +25,7 @@ def authorize():
     return "Failed to generate authorization URL."
 
 
+#Always set this as 'redirect_url'
 @form_routes.route('/api/callback', methods=['GET', 'POST'])
 def callback():
     """
