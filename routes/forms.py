@@ -31,21 +31,40 @@ def callback():
     Handles the OAuth2 redirect callback and processes the authorization code.
     """
 
-    auth_code = request.args.get('code')
-    if auth_code:
+    # Check if the request is a GET or POST request
+    if request.method == 'GET':
+        # Handle query parameters (like 'code')
+        auth_code = request.args.get('code')
+        if auth_code:
+            form_handler.handle_redirect_callback_code(auth_code)
 
-        form_handler.handle_redirect_callback_code(auth_code)
+            token_data = form_handler.get_oauth2_token()
 
-        token_data = form_handler.get_oauth2_token()
-
-        if token_data:
-            # Return the full token data
-            return f"Authorization successful. You can close this window.\n {jsonify(token_data)}"
+            if token_data:
+                # Return the full token data
+                return f"Authorization successful. You can close this window.\n {jsonify(token_data)}"
+            else:
+                return "Failed to retrieve the access token.", 500
         else:
-            return "Failed to retrieve the access token.", 500
+            return "Authorization failed."
 
-    else:
-        return "Authorization failed."
+    elif request.method == 'POST':
+        # Handle JSON payload
+        data = request.get_json()
+
+        auth_code = data.get('code') if data else None
+        if auth_code:
+            form_handler.handle_redirect_callback_code(auth_code)
+
+            token_data = form_handler.get_oauth2_token()
+
+            if token_data:
+                # Return the full token data
+                return jsonify(token_data)
+            else:
+                return "Failed to retrieve the access token.", 500
+        else:
+            return "Authorization failed."
 
 
 @form_routes.route('/api/submit_form', methods=['POST'])
