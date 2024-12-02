@@ -17,7 +17,6 @@ form_handler = FormProcess(
 def authorize():
     """
     Automaticall redirects to the authorization URL to start the OAuth2 flow.
-    The redirect_uri is '/callback' here.
     """
     auth_url = form_handler.authorize_aouth2()
 
