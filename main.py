@@ -53,7 +53,7 @@ def fetch_report():
 if __name__ == "__main__":
     course_operations = CourseOperations()
     course_operations.create_tables()
-    course_operations.clean_up()
+    # course_operations.clean_up()
 
     print("Populating database with sample data...")
 
