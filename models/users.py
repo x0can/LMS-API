@@ -28,6 +28,12 @@ class CanvasUserManager:
 
     def get_user_info(self, user_identifier):
         """Fetch user information by username or email."""
+        
+        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+            raise Exception("User does not have the required permissions")
+    
+        
+        
         try:
             response = requests.get(
                 f"{self.api_url}/accounts/{self.account_id}/users",
@@ -40,8 +46,17 @@ class CanvasUserManager:
         except requests.exceptions.RequestException as e:
             raise Exception(f"Failed to fetch user info: {str(e)}")
 
-    def get_course(self, course_id):
+
+
+    def get_course(self, course_id):  
+        
         """Fetch details for a specific course."""
+        
+        
+        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+            raise Exception("User does not have the required permissions")
+    
+        
         try:
             response = requests.get(
                 f"{self.api_url}/courses/{course_id}",
@@ -57,6 +72,11 @@ class CanvasUserManager:
             raise Exception(f"Error fetching course: {str(e)}")
 
     def create_user(self, name, email):
+        
+        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+            raise Exception("User does not have the required permissions")
+        
+        
         """Create a new user in Canvas."""
         try:
             user_data = {"user": {"name": name,
@@ -72,6 +92,11 @@ class CanvasUserManager:
             raise Exception(f"Error creating user: {str(e)}")
 
     def enroll_user(self, course_id, data, role="StudentEnrollment", start_at=None, end_at=None):
+        
+        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+            raise Exception("User does not have the required permissions")
+        
+        
         """Enroll users in a specific course."""
         try:
             if not self.get_course(course_id):
@@ -123,6 +148,12 @@ class CanvasUserManager:
 
     def fetch_user_progress(self, course_id, user_id):
         """Fetch progress of a specific user in a course."""
+        
+        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+            raise Exception("User does not have the required permissions")
+        
+        
+        
         try:
             response = requests.get(
                 f"{self.api_url}/courses/{course_id}/users/{user_id}/progress",
@@ -135,6 +166,12 @@ class CanvasUserManager:
 
     def fetch_enrolled_users(self, course_id):
         """Fetch all enrolled users in a course."""
+        
+        
+        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+            raise Exception("User does not have the required permissions")
+        
+        
         try:
             response = requests.get(
                 f"{self.api_url}/courses/{course_id}/enrollments", headers=self.headers
@@ -144,8 +181,16 @@ class CanvasUserManager:
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error fetching enrolled users: {str(e)}")
 
+
+
     def generate_progress_report(self, course_id):
         """Generate a progress report for all users in a course."""
+        
+        
+        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+            raise Exception("User does not have the required permissions")
+        
+        
         try:
             # Fetch all enrolled users in the course
             enrolled_users = self.fetch_enrolled_users(course_id)
