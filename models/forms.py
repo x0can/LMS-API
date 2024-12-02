@@ -2,13 +2,17 @@ import requests
 
 
 class FormProcess:
-    def __init__(self, api_url, client_id, client_secret, redirect_uri, code=None):
+    def __init__(self, api_url, client_id, client_secret, redirect_uri, code=None, access_token=None):
         self.api_url = api_url
         self.client_id = client_id
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
         self.code = code
-
+        self.access_token = access_token
+        self.headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json"
+        }
 
     def handle_redirect_callback_code(self, code):
         self.code = code
@@ -52,7 +56,10 @@ class FormProcess:
 
             # Return the access token if successful
             token_data = response.json()
-            return token_data.get("access_token")
+            access_token = token_data.get('access_token')
+            self.access_token = access_token
+
+            return self.access_token
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error generating OAuth2 token {str(e)}")
 
@@ -65,18 +72,9 @@ class FormProcess:
 
         try:
 
-            # get access_token
-            access_token = self.get_oauth2_token()
-
-            # Define headers for authentication
-            headers = {
-                "Authorization": f"Bearer {access_token}",
-                "Content-Type": "application/json"
-            }
-
             # Send POST request to Formstack
             response = requests.post(
-                endpoint, json=applicant_data, headers=headers)
+                endpoint, json=applicant_data, headers=self.headers)
 
             # Raise an error if the request failed
             response.raise_for_status()
