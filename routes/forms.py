@@ -25,7 +25,7 @@ def authorize():
     return "Failed to generate authorization URL."
 
 
-@form_routes.route('/api/callback')
+@form_routes.route('/api/callback', methods=['GET', 'POST'])
 def callback():
     """
     Handles the OAuth2 redirect callback and processes the authorization code.
