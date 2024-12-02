@@ -88,6 +88,7 @@ then `python3 main.py`
 
 Naviage to the following endpoints, either on postman or use `httpie` to test.
 
+Courses, Modules, Assignments and Quizzes configuration routes
 ```
 POST localhost:5000/api/create_course  
 
@@ -104,7 +105,7 @@ POST localhost:5000/api/create_modules
     module_name
 }
 
-POST localhost:5000/api/create_assignments
+POST localhost:5000/api/create_assignment
 
 
 -d = {
@@ -112,18 +113,50 @@ POST localhost:5000/api/create_assignments
     assignment_name
 }
 
-POST localhost:5000/api/create_modules
+POST localhost:5000/api/create_quizz
 
+-d = {
+    course_id
+    title
+}
+
+POST localhost:5000/api/configure_module_release_date
+
+-d = {
+    course_id
+    module_id
+    start_date
+    interval
+}
 
 ```
 
+Enroll Users Routes
 ```
+POST localhost:5000/api/users  - To create users
+-d = {
+    name
+    email
+}
 
+POST localhost:5000/api/courses/<int:course_id>/enroll
+
+-d {
+    
+}
+
+GET localhost:5000/api/courses/<int:course_id>/enrollments
+
+- p {
+    user_identifier: /email
+}
+
+GET localhost:5000/api/fetch_user_progress
+
+
+GET localhost:5000/api/progress_report
 
 ```
-
-
-
 
 Steps
 - Initilize the following classes

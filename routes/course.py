@@ -50,7 +50,7 @@ def create_modules():
         return jsonify({"error": str(e)}), 500
 
 
-@course_routes.route('/api/create_assignments', methods=['POST'])
+@course_routes.route('/api/create_assignment', methods=['POST'])
 def create_assignments():
 
     data = request.json
@@ -69,35 +69,36 @@ def create_assignments():
         return jsonify({"error": str(e)}), 500
 
 
-@course_routes.route('/api/create_quizzes', methods=['POST'])
+@course_routes.route('/api/create_quizz', methods=['POST'])
 def create_quizzes():
 
     data = request.json
     course_id = data.get("course_id")
-    quizzes = data.get("quizzes")
+    title = data.get("title")
 
-    if not all([course_id, quizzes]):
+    if not all([course_id, title]):
         return jsonify({"error": "Missing required fields"}), 400
 
     try:
-        course_manager.create_quizzes(course_id, quizzes)
-        return jsonify({"message": "Quizzes created successfully"}), 201
+        course_manager.create_quiz(course_id, title)
+        return jsonify({"message": "Quizze created successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@course_routes.route('/api/configure_module_release_dates', methods=['POST'])
+@course_routes.route('/api/configure_module_release_date', methods=['POST'])
 def configure_module_release_dates():
 
     data = request.json
     course_id = data.get("course_id")
     module_id = data.get("module_id")
     start_date = data.get("start_date")
+    interval_week = data.get('interval')
 
     try:
         start_date = datetime.fromisoformat(start_date)
         course_manager.configure_module_release_dates(
-            course_id, module_id, start_date, 1)
+            course_id, module_id, start_date, interval_week)
         return jsonify({"message": "Module release date configured successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
