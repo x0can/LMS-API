@@ -29,13 +29,13 @@ const validateStartDate = (startDate) => {
 
 // handlers
 
-const submitForm = async (formData, url) => {
+const submitForm = async (url, formData) => {
   // Validate form data
   validDate = validateStartDate(formData["start_date"]);
 
   // If validation fails (validDate is an object with an error), return the error
   if (validDate.error) {
-    return validDate; 
+    return validDate;
   }
   try {
     const response = await fetch(url, {
@@ -59,49 +59,56 @@ const submitForm = async (formData, url) => {
   }
 };
 
+function handle_form() {
+  const form = document.getElementById("submitForm");
 
+  const url = "http://127.0.0.1:5000/api/submit_form";
 
-const form = document.getElementById("submitForm");
+  const formStatus = document.getElementById("formStatus");
 
-const url = "localhost:5000/api/submit_form";
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+    const formData = {
+      name: form.name.value,
+      type: form.type.value,
+      first_name: form.first_name.value,
+      last_name: form.last_name.value,
+      email: form.email.value,
+      gender: form.gender.value,
+      from_location: form.from_location.value,
+      source: form.source.value,
+      employment_status: form.employment_status.value,
+      start_date: form.start_date.value,
+      education_level: form.education_level.value,
+      institution: form.institution.value,
+      area_of_study: form.area_of_study.value,
+      professional_background: form.professional_background.value,
+      industry: form.industry.value,
+      kin_name: form.kin_name.value,
+      kin_phone: form.kin_phone.value,
+      kin_email: form.kin_email.value,
+      consent: form.consent.checked,
+    };
 
-  const formData = {
-    name: form.name.value,
-    type: form.type.value,
-    first_name: form.first_name.value,
-    last_name: form.last_name.value,
-    email: form.email.value,
-    gender: form.gender.value,
-    from_location: form.from_location.value,
-    source: form.source.value,
-    employment_status: form.employment_status.value,
-    start_date: form.start_date.value,
-    education_level: form.education_level.value,
-    institution: form.institution.value,
-    area_of_study: form.area_of_study.value,
-    professional_background: form.professional_background.value,
-    industry: form.industry.value,
-    kin_name: form.kin_name.value,
-    kin_phone: form.kin_phone.value,
-    kin_email: form.kin_email.value,
-    consent: form.consent.checked,
-  };
+    try {
+      const result = await submitForm(url, formData);
 
-  try {
-    const result = await submitForm(formData);
+      const { error } = result;
 
-    if ({error} = result){
-      
+      if (error) {
+        formStatus.textContent = error;
+        formStatus.style.color = "#F44336";
+      } else {
+        formStatus.textContent = "Form submitted successfully!";
+        formStatus.style.color = "green";
+      }
+    } catch (error) {
+      console.log(error.message);
+      formStatus.textContent = error.message;
+      formStatus.style.color = "#F44336";
     }
-    alert("Form submitted successfully!");
+  });
+}
 
-    console.log("Form response:", result);
-  } catch (error) {
-    alert("Error submitting form. Please try again.");
-  }
-  
-});
-
+handle_form();

@@ -6,10 +6,10 @@ form_routes = Blueprint('form_routes', __name__)
 
 
 form_handler = FormProcess(
-    Config.API_URL,
+    Config.FORM_API_URL,
     Config.FORM_CLIENT_ID,
     Config.FORM_CLIENT_SECRET,
-    "http://localhost:5000/api/callback" # Always set this as '/callback'
+    "http://localhost:5000/api/callback"  # Always set this as '/callback'
 )
 
 
@@ -29,26 +29,23 @@ def authorize():
 def callback():
     """
     Handles the OAuth2 redirect callback and processes the authorization code.
-    """    
-    
-   
-        
+    """
+
     auth_code = request.args.get('code')
     if auth_code:
-        
+
         form_handler.handle_redirect_callback_code(auth_code)
 
         token_data = form_handler.get_oauth2_token()
-        
+
         if token_data:
-            return f"Authorization successful. You can close this window.\n {jsonify(token_data)}"  # Return the full token data
+            # Return the full token data
+            return f"Authorization successful. You can close this window.\n {jsonify(token_data)}"
         else:
             return "Failed to retrieve the access token.", 500
-    
+
     else:
         return "Authorization failed."
-        
-
 
 
 @form_routes.route('/api/submit_form', methods=['POST'])
@@ -57,22 +54,25 @@ def submit_form():
 
     # Validate the required fields in the form data
     required_fields = [
+        "form_id"
         "name",
         "type",
-        "first_name", "last_name", "email", "gender", "from_location", "source", 
-        "employment_status", "start_date", "education_level", "institution", 
-        "area_of_study", "professional_background", "industry", "kin_name", 
+        "first_name", "last_name", "email", "gender", "from_location", "source",
+        "employment_status", "start_date", "education_level", "institution",
+        "area_of_study", "professional_background", "industry", "kin_name",
         "kin_phone", "kin_email", "consent"
     ]
-    
+
     missing_fields = [field for field in required_fields if field not in data]
 
-    
     if missing_fields:
         return jsonify({"error": f"Missing required fields. {missing_fields}"}), 400
 
-    # Call the submit_form_data method to send the data
-    response_data, status_code = form_handler.submit_form_data(data)
+    try:
+        # Call the submit_form_data method to send the data
+        response_data, status_code = form_handler.submit_formstack_application(
+            data['form_id'], data)
 
-    return jsonify(response_data), status_code
-
+        return jsonify(response_data), status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

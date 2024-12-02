@@ -6,7 +6,10 @@ from routes import configure_routes
 from config import Config
 from db.student_queries import get_student_performance
 from flask_cors import CORS
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
 
 
 
@@ -15,9 +18,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 app.config.from_object(Config)
 
-CORS(app, resources=r'/api/*')
-
-
+CORS(app)
 
 # Configure routes
 configure_routes(app)
