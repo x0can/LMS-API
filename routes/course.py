@@ -157,3 +157,69 @@ def configure_module_release_dates():
         return jsonify({"message": "Module release date configured successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+
+
+@course_routes.route("/api/users", methods=["POST"])
+def create_user():
+
+    try:
+        data = request.json
+        if not data or "name" not in data or "email" not in data:
+            return jsonify({"error": "Name and email are required"}), 400
+        return jsonify(course_manager.create_user(data["name"], data["email"]))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@course_routes.route("/api/courses/<int:course_id>/enroll", methods=["POST"])
+def enroll_user(course_id):
+
+    try:
+        data = request.json
+        if not data or "user_identifier" not in data:
+            return jsonify({"error": "User identifier is required"}), 400
+        return jsonify(course_manager.enroll_user(course_id, data))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@course_routes.route("/api/courses/<int:course_id>/enrollments", methods=["GET"])
+def fetch_enrollments(course_id):
+    try:
+        return jsonify(course_manager.fetch_enrolled_users(course_id))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@course_routes.route('/api/fetch_user_progress', methods=['GET'])
+def api_fetch_user_progress():
+    course_id = request.args.get("course_id")
+    user_id = request.args.get("user_id")
+
+    # Validate inputs
+    if not course_id or not user_id:
+        return jsonify({"error": "Missing required query parameters: course_id and user_id"}), 400
+
+    try:
+        progress = course_manager.fetch_user_progress(course_id, user_id)
+        if progress:
+            return jsonify(progress), 200
+        else:
+            return jsonify({"error": "Failed to fetch user progress"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@course_routes.route('/api/progress_report', methods=['GET'])
+def get_progress_report():
+    course_id = request.args.get('course_id')
+    if not course_id:
+        return jsonify({"error": "Course ID is required"}), 400
+
+    try:
+        progress_data = course_manager.generate_progress_report(course_id)
+        return jsonify(progress_data), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to generate progress report: {str(e)}"}),
