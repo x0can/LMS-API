@@ -6,7 +6,9 @@ from config import Config
 user_routes = Blueprint('user_routes', __name__)
 
 user_manager = CanvasUserManager(
-    Config.API_URL, Config.API_TOKEN, Config.ACCOUNT_ID)
+    Config.API_URL, Config.ACCOUNT_ID,
+    "http://localhost:5000/api/canvas/callback",
+    Config.CANVAS_CLIENT_SECRET)
 
 
 @user_routes.route("/api/users", methods=["POST"])
