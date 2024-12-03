@@ -8,7 +8,7 @@ course_routes = Blueprint('course_routes', __name__)
 
 
 course_manager = CourseManager(
-    Config.API_URL, Config.ACCOUNT_ID,
+    Config.CANVAS_URL, Config.CLIENT_ID,
     "http://localhost:5000/api/canvas/callback",
     Config.CANVAS_CLIENT_SECRET
 )
@@ -73,6 +73,9 @@ def callback():
 def create_course():
 
     data = request.json
+
+    print(data)
+
     course_name = data.get("course_name")
     course_code = data.get("course_code")
     start_date = data.get("start_date")
@@ -82,7 +85,7 @@ def create_course():
 
     try:
         course = course_manager.create_course(
-            course_name, course_code, start_date)
+            course_name, start_date, 'private', course_code)
         return jsonify(course), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -111,13 +114,13 @@ def create_assignments():
     data = request.json
     course_id = data.get("course_id")
     assignment_name = data.get("assignment_name")
-    assignment_name = data.get("assignment_name")
+    module_id = data.get("module_id")
 
-    if not all([course_id, assignment_name]):
+    if not all([course_id, assignment_name, module_id]):
         return jsonify({"error": "Missing required fields"}), 400
 
     try:
-        course_manager.create_assignments(course_id, assignment_name)
+        course_manager.create_assignments(course_id, assignment_name, module_id)
 
         return jsonify({"message": "Assignments created successfully"}), 201
     except Exception as e:
@@ -129,13 +132,14 @@ def create_quizzes():
 
     data = request.json
     course_id = data.get("course_id")
+    module_id = data.get("module_id")
     title = data.get("title")
 
-    if not all([course_id, title]):
+    if not all([course_id, title, module_id]):
         return jsonify({"error": "Missing required fields"}), 400
 
     try:
-        course_manager.create_quiz(course_id, title)
+        course_manager.create_quiz(course_id, title, module_id)
         return jsonify({"message": "Quizze created successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -150,7 +154,12 @@ def configure_module_release_dates():
     start_date = data.get("start_date")
     interval_week = data.get('interval')
 
+    if not all([course_id, module_id, start_date, interval_week]):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    
     try:
+        
         start_date = datetime.fromisoformat(start_date)
         course_manager.configure_module_release_dates(
             course_id, module_id, start_date, interval_week)
@@ -159,16 +168,19 @@ def configure_module_release_dates():
         return jsonify({"error": str(e)}), 500
 
 
-
-
 @course_routes.route("/api/users", methods=["POST"])
 def create_user():
 
+    data = request.json
+    name = data.get('name')
+    email = data.get('email')
+    
+    if not all([name, email]):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    
     try:
-        data = request.json
-        if not data or "name" not in data or "email" not in data:
-            return jsonify({"error": "Name and email are required"}), 400
-        return jsonify(course_manager.create_user(data["name"], data["email"]))
+        return jsonify(course_manager.create_user(name, email))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -182,6 +194,7 @@ def enroll_user(course_id):
             return jsonify({"error": "User identifier is required"}), 400
         return jsonify(course_manager.enroll_user(course_id, data))
     except Exception as e:
+        print('error')
         return jsonify({"error": str(e)}), 500
 
 

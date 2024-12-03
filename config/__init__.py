@@ -6,9 +6,9 @@ load_dotenv()
 
 
 class Config:
-    API_URL = os.getenv("API_URL")
+    CANVAS_URL = os.getenv("CANVAS_URL")
     API_TOKEN = os.getenv("API_TOKEN")
-    ACCOUNT_ID = os.getenv("ACCOUNT_ID")
+    CLIENT_ID = os.getenv("CLIENT_ID")
     FORM_API_URL = os.getenv('FORM_API_URL')
     FORM_CLIENT_ID = os.getenv('FORM_CLIENT_ID')
     FORM_CLIENT_SECRET = os.getenv('FORM_SECRET')
