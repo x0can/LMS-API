@@ -255,7 +255,7 @@ def create_sample_grades(num_students=10, num_subjects=5):
 
 
 
-we can connect our new logic to  `main.py`
+finally, we can connect our new logic to  `main.py`
 
 ```python=
 from db import (
@@ -448,5 +448,6 @@ Here is a snapshot of how it should look
       "subject_name": "English"
     },
     
+    .......
 
 ```

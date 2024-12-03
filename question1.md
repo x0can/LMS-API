@@ -48,10 +48,10 @@ Canvas API documentation: https://canvas.instructure.com/doc/api/index.html
 
 Requirements
 
-1. Admin rights on Canvas
-2. Access to API URL on Canvas
-3. Account ID from Canvas
-4. API Token from Canvas
+
+1. Canavas Instanc URL on Canvas
+3. Client ID from Canvas
+4. Client Secret from Canvas
 
 Project structure
 
@@ -61,12 +61,10 @@ config
 models
    courses.py
    forms.py
-   users.py
 routes
     __init__.py
     courses.py
     forms.py
-    users.py
 main.py
 .env
 .gitignore
@@ -77,19 +75,23 @@ requirements.txt
 configure the following environment variables inside the .`env` file
 
 ```
-API_TOKEN=YOUR_API_TOKEN
-API_URL=YOUR_API_URL
-ACCOUNT_ID=YOUR_ACCOUNT_ID
+CANVAS_URL=YOUR_CANVAS_URL
+CLIENT_ID=YOUR_ACCOUNT_ID / CLIENT_ID
+CANVAS_CLIENT_SECRET=CANVAS_CLIENT_SECRET
 ```
 
 run `pip3 install -r requirements`
 
 then `python3 main.py`
 
-Naviage to the following endpoints, either on postman or use `httpie` to test.
-Courses, Modules, Assignments and Quizzes configuration routes
+Navigate to the following endpoints, either on `postman` , `VS code Thunderbolt extension` or any other API testing tool.
+
+
+Courses, Modules, Assignments and Quizzes API routes
 
 ```
+GET localhost:5000/api/canvas/authorize  - To get url to generate auth token
+
 
 POST localhost:5000/api/create_course  
 
@@ -158,42 +160,114 @@ GET localhost:5000/api/progress_report
 
 
 
-Steps
-- Initilize the following classes
+First since we are working with an API that requires us to be authorized via AOuth2, we need to configure a way to handle this requests for generating the token
 
 
-models.courses.py
+```
+GET /login/oauth2/auth
+```
+
+```
+POST /login/oauth2/token
+```
+
+To do that we will start be implementing the following
+
+- Create a class named `CourseManager`
+- Inititate it with the following,
+
 ```python=
 class CourseManager:
-    def __init__(self, api_url, api_token, account_id, user):
+    def __init__(self, api_url, account_id, redirect_url, client_secret, code=None, access_token=None):
         self.api_url = api_url
-        self.headers = {
-            "Authorization": f"Bearer {api_token}",
-            "Content-Type": "application/json"
-        }
         self.account_id = account_id
-        self.user = user
-        
-# ...
+        self.client_secret = client_secret
+        self.redirect_url = redirect_url
+        self.access_token = access_token
+        self.code = code
+        self.headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json"
+
+        }
 
 
 ```
 
+Proceed by adding the following methods below the class
 
-models.users.py
+`authorize_aouth2` generates url to get auth `code`
+
+`get_oauth2_token`         Generates an OAuth2 token using the Canvas API.
+
+
+
 ```python=
-class CanvasUserManager:
-    def __init__(self,api_url, api_token, account_id):
-        self.account_id = account_id
-        self.headers = {
-            "Authorization": f"Bearer {api_token}",
-            "Content-Type": "application/json"
+
+    def handle_redirect_callback_code(self, code):
+        self.code = code
+        return code
+
+    def authorize_aouth2(self):
+
+        endpoint = f"{self.api_url}/login/oauth2/auth"
+        try:
+            # Construct the authorization URL
+            auth_url = f"{endpoint}?account_id={self.account_id}&response_type=code&redirect_uri={self.redirect_url}"
+            return auth_url
+
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Error generating OAuth2 token {str(e)}")
+
+    def get_oauth2_token(self):
+        """
+        Generates an OAuth2 token using the Canvas API.
+        """
+
+        if not self.code:
+            return "Authorization code is missing. Please authorize first."
+
+        # Define endpoint and payload
+        endpoint = f"{self.api_url}/login/oauth2/token"
+        payload = {
+            "grant_type": "authorization_code",
+            "account_id": self.account_id,
+            "client_secret": self.client_secret,
+            "redirect_uri": self.redirect_url,
+            "code": self.code
         }
-        self.api_url = api_url
-        self.api_token = api_token
+
+        try:
+            # Send POST request to get the token
+            response = requests.post(endpoint, data=payload)
+
+            # Raise an error if the request failed
+            response.raise_for_status()
+
+            # Return the access token if successful
+            token_data = response.json()
+            access_token = token_data.get('access_token')
+            self.access_token = access_token
+
+            return self.access_token
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Error generating OAuth2 token {str(e)}")            
+
 ```
 
+The routes to handle the above are located in this repository: https://github.com/x0can/LMS-API/blob/main/routes/course.py
 
+To proceed to obtain the token
+
+navigate to
+
+`http://localhost:5000/api/canvas/authorize`
+
+This will redirect you to a new page and if you see the following message `Authorization successful. You can close this window.`
+
+Next we can proceed to implement the following
+
+**NB: At the moment there are no session handlers enabled, therefore if you current sesssion terminates, you might need to repeat the above process to re-generate the token**
 
 ### How * to Via Canvas LMS API for the following actions
 - [How to create a course Via Canvas API](#How-to-create-a-course-Via-Canvas-API)
@@ -218,21 +292,21 @@ First we need to manage permissions in,
 
 ```
 models
-    users.py
+    courses.py
 ```
 
 
 ### Manage Permissions User Permissions
 
-The following method checks if the user has the permissions listed. Depending on the role it will return True, otherwise, it will notify the user they do nt have permissions to perform the action
+The following method checks if the user has the permissions listed. Depending on the role it will return True, otherwise, it will notify the user they dont have permissions to perform the action
 
 
 update
 
+models.courses.py
 ```python=
-users.py
 
-class CanvasUserManager:
+class CourseManager:
     
 ...
    def get_user_permissions(self, account_id, permissions):   
@@ -586,7 +660,7 @@ For this we will use the following process
 
 
 
-Github: https://github.com/x0can/LMS-API/blob/main/models/users.py
+Github: https://github.com/x0can/LMS-API/blob/main/models/courses.py
 
 
 
@@ -597,7 +671,7 @@ Canavs API Endpoint to check user permissions
 GET api/v1/accounts/{account_id}/permissions
 ```
 
-models.users.py
+models.courses.py
 
 ```python=
 
@@ -644,7 +718,7 @@ Canvas API Endpoint
 GET /api/v1/courses/:id
 ```
 
-models.users.py
+models.courses.py
 
 ```python=
 
@@ -676,7 +750,7 @@ Use the Users API to search for the user by email or name.
 
 Resource Material https://canvas.instructure.com/doc/api/users.html#method.users.api_index
 
-API Endpoint
+Canvas API Endpoint
 
 ```
 GET /api/v1/accounts/:account_id/users
@@ -696,7 +770,7 @@ Process
 - If not found throw 404 error with the message `No user found with user_identifier`
 - Else throw an exception error with the message `Error occurred while fetching user info: <ExceptionError>`
 
-models.users.py
+models.courses.py
 ```python=
 # Add this in the class CanvasUserManager
 ...
@@ -736,7 +810,7 @@ models.users.py
     - pseudonym[unique_id]: The user's unique login ID (usually their email).
 
 
-models.users.py
+models.courses.py
 ```python=
 # Add this in the class CanvasUserManager
 
@@ -763,7 +837,7 @@ models.users.py
 
 Resource Material: https://canvas.instructure.com/doc/api/enrollments.html#method.enrollments_api.create
 
-API Endpoint
+Canvas API Endpoint
 
 ```
 POST /api/v1/courses/:course_id/enrollments
@@ -788,7 +862,7 @@ Process:
 - Define the enrollement data i.e type:role, user state,user_id
 - Bulk enroll users if the above checks out
 
-models.users.py
+models.courses.py
 ```python=
 # Add this in the class CanvasUserManager
 ...
@@ -852,7 +926,8 @@ models.users.py
 
 This is done in the following repository
 
-Github: https://github.com/x0can/LMS-API/blob/main/routes/users.py
+Github: https://github.com/x0can/LMS-API/blob/main/routes/course.py
+
 
 
 
@@ -860,7 +935,7 @@ Github: https://github.com/x0can/LMS-API/blob/main/routes/users.py
 
 Resource Material: https://canvas.instructure.com/doc/api/courses.html#method.courses.user_progress
 
-API Endpoint
+Canvas API Endpoint
 
 ```
 GET /api/v1/courses/:course_id/users/:user_id/progress
@@ -900,7 +975,7 @@ Process
 
 **Fetch user progress data for a specific course**
 
-models.users.py
+models.courses.py
 ```python=
 
 # Add this in the class CanvasUserManager
@@ -931,7 +1006,7 @@ API endpoint
 GET /api/v1/courses/:course_id/enrollments
 ```
 
-models.users.py
+models.courses.py
 ```python=
 ...
     # Function to fetch enrolled users in a course

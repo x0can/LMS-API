@@ -48,12 +48,11 @@ Referrence material: https://developers.formstack.com/docs/getting-started
     models
        courses.py
        forms.py
-       users.py
+    
     routes
         __init__.py
         courses.py
         forms.py
-        users.py
     main.py
     .env
     .gitignore
@@ -84,7 +83,7 @@ Next
 
 On your browser send this request to obtain redirect_url for generating `auth token`
 ```
-GET [your-local-url](http://127.0.0.1:5000)/api/authorize
+GET  http://127.0.0.1:5000/api/authorize
 ```
 
 
@@ -101,7 +100,8 @@ Requirements and Assumptions:
     FORM_CLIENT_SECRET,
     REDIRECT_URL,
     `
-    Formstack admin: https://admin.formstack.com/
+    
+    Formstack Aouth2: https://developers.formstack.com/reference/oauth2-authorize-get
     
 - First we need to obtain an OAuth2 token for us to proceed. 
 
@@ -225,7 +225,7 @@ def authorize():
 
 
 
-@form_routes.route('/api/callback')
+@form_routes.route('/api/callback', methods=['GET', 'POST'])
 def callback():
     """
     Handles the OAuth2 redirect callback and processes the authorization code.
@@ -319,6 +319,15 @@ class FormProcess:
 
 ```
 
+When testing you might incur the following error,`Authorization code is missing. Please authorize first.` 
+
+If you do, send a request to this endpoint
+
+```
+GET Http://Your-local-host/api/authorize
+```
+
+Then resume the process
 
 create the '/submit-form' endpoint
 
@@ -370,6 +379,13 @@ process
 - Create an input validation function to check if the date is two weeks from current date
 - Check if applicant's start date is okay and
 - Send a `POST` request to our backend
+
+
+
+Test by starting a server on the following path `/clients/index.html`
+
+Or simply open the html file on a browser.
+
 
 
 client.handlers.js
@@ -494,3 +510,6 @@ handle_form();
 
 
 ```
+To test the above
+
+Run a live server inside the `/clients/index.html` file then submit the form there.
