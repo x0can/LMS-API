@@ -9,7 +9,7 @@ course_routes = Blueprint('course_routes', __name__)
 
 course_manager = CourseManager(
     Config.CANVAS_URL, Config.CLIENT_ID,
-    "http://localhost:5000/api/canvas/callback",
+    Config.REDIRECT_URL_CANVAS, # Always set to /api/canvas/callback
     Config.CANVAS_CLIENT_SECRET
 )
 

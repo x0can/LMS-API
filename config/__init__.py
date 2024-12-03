@@ -14,3 +14,4 @@ class Config:
     FORM_CLIENT_SECRET = os.getenv('FORM_SECRET')
     REDIRECT_URL = os.getenv('REDIRECT_URL')
     CANVAS_CLIENT_SECRET = os.getenv('CANVAS_CLIENT_SECRET')
+    REDIRECT_URL_CANVAS= os.getenv('REDIRECT_URL_CANVAS')
