@@ -1,17 +1,72 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, redirect
 from datetime import datetime
 from config import Config
 from models.courses import CourseManager
-from models.users import CanvasUserManager
 
 
 course_routes = Blueprint('course_routes', __name__)
 
-user_manager = CanvasUserManager(
-    Config.API_URL, Config.API_TOKEN, Config.ACCOUNT_ID)
-course_manager = CourseManager(
-    Config.API_URL, Config.API_TOKEN, Config.ACCOUNT_ID, user=user_manager)
 
+course_manager = CourseManager(
+    Config.API_URL, Config.ACCOUNT_ID,
+    "http://localhost:5000/api/canvas/callback",
+    Config.CANVAS_CLIENT_SECRET
+)
+
+
+@course_routes.route('/api/canvas/authorize')
+def authorize():
+    """
+    Automaticall redirects to the authorization URL to start the OAuth2 flow.
+    """
+    auth_url = course_manager.authorize_aouth2()
+
+    if auth_url:
+        return redirect(auth_url)  # Redirect the user to the authorization URL
+    return "Failed to generate authorization URL."
+
+
+# Always set this as 'redirect_url'
+@course_routes.route('/api/canvas/callback', methods=['GET', 'POST'])
+def callback():
+    """
+    Handles the OAuth2 redirect callback and processes the authorization code.
+    """
+
+    # Check if the request is a GET or POST request
+    if request.method == 'GET':
+        # Handle query parameters (like 'code')
+        auth_code = request.args.get('code')
+        if auth_code:
+            course_manager.handle_redirect_callback_code(auth_code)
+
+            token_data = course_manager.get_oauth2_token()
+
+            if token_data:
+                # Return the full token data
+                return f"Authorization successful. You can close this window.\n {jsonify(token_data)}"
+            else:
+                return "Failed to retrieve the access token.", 500
+        else:
+            return "Authorization failed."
+
+    elif request.method == 'POST':
+        # Handle JSON payload
+        data = request.get_json()
+
+        auth_code = data.get('code') if data else None
+        if auth_code:
+            course_manager.handle_redirect_callback_code(auth_code)
+
+            token_data = course_manager.get_oauth2_token()
+
+            if token_data:
+                # Return the full token data
+                return jsonify(token_data)
+            else:
+                return "Failed to retrieve the access token.", 500
+        else:
+            return "Authorization failed."
 
 
 @course_routes.route('/api/create_course', methods=['POST'])

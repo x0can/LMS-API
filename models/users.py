@@ -3,13 +3,66 @@ from datetime import datetime, timedelta
 
 
 class CanvasUserManager:
-    def __init__(self, api_url, api_token, account_id):
-        self.account_id = account_id
-        self.headers = {
-            "Authorization": f"Bearer {api_token}",
-            "Content-Type": "application/json",
-        }
+    def __init__(self, api_url, client_id, client_secret, redirect_uri, code=None, access_token=None):
         self.api_url = api_url
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.redirect_uri = redirect_uri
+        self.code = code
+        self.access_token = access_token
+        self.headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json"
+        }
+
+    def handle_redirect_callback_code(self, code):
+        self.code = code
+        return code
+
+    def authorize_aouth2(self):
+
+        endpoint = f"{self.api_url}/login/oauth2/auth"
+        try:
+            # Construct the authorization URL
+            auth_url = f"{endpoint}?client_id={self.client_id}&redirect_uri={self.redirect_url}&response_type=code"
+            return auth_url
+
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Error generating OAuth2 token {str(e)}")
+
+    def get_oauth2_token(self):
+        """
+        Generates an OAuth2 token using the Formstack API.
+        """
+
+        if not self.code:
+            return "Authorization code is missing. Please authorize first."
+
+        # Define endpoint and payload
+        endpoint = f"{self.api_url}/login/oauth2/token"
+        payload = {
+            "grant_type": "authorization_code",
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "redirect_uri": self.redirect_url,
+            "code": self.code
+        }
+
+        try:
+            # Send POST request to get the token
+            response = requests.post(endpoint, data=payload)
+
+            # Raise an error if the request failed
+            response.raise_for_status()
+
+            # Return the access token if successful
+            token_data = response.json()
+            access_token = token_data.get('access_token')
+            self.access_token = access_token
+
+            return self.access_token
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Error generating OAuth2 token {str(e)}")
 
     def get_user_permissions(self, account_id, permissions):
         """Check if the user has the specified permissions."""
@@ -28,15 +81,13 @@ class CanvasUserManager:
 
     def get_user_info(self, user_identifier):
         """Fetch user information by username or email."""
-        
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+
+        if not self.get_user_permissions(self.client_id, permissions=['manage_courses_admin']):
             raise Exception("User does not have the required permissions")
-    
-        
-        
+
         try:
             response = requests.get(
-                f"{self.api_url}/accounts/{self.account_id}/users",
+                f"{self.api_url}/accounts/{self.client_id}/users",
                 headers=self.headers,
                 params={"search_term": user_identifier},
             )
@@ -46,17 +97,12 @@ class CanvasUserManager:
         except requests.exceptions.RequestException as e:
             raise Exception(f"Failed to fetch user info: {str(e)}")
 
-
-
-    def get_course(self, course_id):  
-        
+    def get_course(self, course_id):
         """Fetch details for a specific course."""
-        
-        
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+
+        if not self.get_user_permissions(self.client_id, permissions=['manage_courses_admin']):
             raise Exception("User does not have the required permissions")
-    
-        
+
         try:
             response = requests.get(
                 f"{self.api_url}/courses/{course_id}",
@@ -72,17 +118,16 @@ class CanvasUserManager:
             raise Exception(f"Error fetching course: {str(e)}")
 
     def create_user(self, name, email):
-        
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+
+        if not self.get_user_permissions(self.client_id, permissions=['manage_courses_admin']):
             raise Exception("User does not have the required permissions")
-        
-        
+
         """Create a new user in Canvas."""
         try:
             user_data = {"user": {"name": name,
                                   "pseudonym": {"unique_id": email}}}
             response = requests.post(
-                f"{self.api_url}/accounts/{self.account_id}/users",
+                f"{self.api_url}/accounts/{self.client_id}/users",
                 headers=self.headers,
                 json=user_data,
             )
@@ -92,11 +137,10 @@ class CanvasUserManager:
             raise Exception(f"Error creating user: {str(e)}")
 
     def enroll_user(self, course_id, data, role="StudentEnrollment", start_at=None, end_at=None):
-        
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+
+        if not self.get_user_permissions(self.client_id, permissions=['manage_courses_admin']):
             raise Exception("User does not have the required permissions")
-        
-        
+
         """Enroll users in a specific course."""
         try:
             if not self.get_course(course_id):
@@ -148,12 +192,10 @@ class CanvasUserManager:
 
     def fetch_user_progress(self, course_id, user_id):
         """Fetch progress of a specific user in a course."""
-        
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+
+        if not self.get_user_permissions(self.client_id, permissions=['manage_courses_admin']):
             raise Exception("User does not have the required permissions")
-        
-        
-        
+
         try:
             response = requests.get(
                 f"{self.api_url}/courses/{course_id}/users/{user_id}/progress",
@@ -166,12 +208,10 @@ class CanvasUserManager:
 
     def fetch_enrolled_users(self, course_id):
         """Fetch all enrolled users in a course."""
-        
-        
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+
+        if not self.get_user_permissions(self.client_id, permissions=['manage_courses_admin']):
             raise Exception("User does not have the required permissions")
-        
-        
+
         try:
             response = requests.get(
                 f"{self.api_url}/courses/{course_id}/enrollments", headers=self.headers
@@ -181,16 +221,12 @@ class CanvasUserManager:
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error fetching enrolled users: {str(e)}")
 
-
-
     def generate_progress_report(self, course_id):
         """Generate a progress report for all users in a course."""
-        
-        
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
+
+        if not self.get_user_permissions(self.client_id, permissions=['manage_courses_admin']):
             raise Exception("User does not have the required permissions")
-        
-        
+
         try:
             # Fetch all enrolled users in the course
             enrolled_users = self.fetch_enrolled_users(course_id)
