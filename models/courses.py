@@ -59,9 +59,9 @@ class CourseManager:
             # Return the access token if successful
             token_data = response.json()
             access_token = token_data.get('access_token')
-            self.access_token = access_token
+            self.handle_token(access_token)
 
-            return self.access_token
+            return
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error generating OAuth2 token {str(e)}")
 
