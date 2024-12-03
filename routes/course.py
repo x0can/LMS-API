@@ -54,19 +54,13 @@ def callback():
         # Handle JSON payload
         data = request.get_json()
 
-        auth_code = data.get('code') if data else None
-        if auth_code:
-            course_manager.handle_redirect_callback_code(auth_code)
-
-            token_data = course_manager.get_oauth2_token()
-
-            if token_data:
-                # Return the full token data
-                return jsonify(token_data)
-            else:
-                return "Failed to retrieve the access token.", 500
+        access_token = data.get('access_token') if data else None
+        if access_token:
+            status =  course_manager.handle_token(access_token)
+            return jsonify(status), 200
+            
         else:
-            return "Authorization failed."
+            return "Authorization failed.", 500
 
 
 @course_routes.route('/api/create_course', methods=['POST'])

@@ -63,6 +63,12 @@ class FormProcess:
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error generating OAuth2 token {str(e)}")
 
+
+    def handle_token(self, access_token):
+        self.access_token = access_token
+        return "Authorization Successfull"
+
+
     def submit_formstack_application(self, form_id, applicant_data):
         """
         Submits an application to the Formstack API using OAuth2 tokens.

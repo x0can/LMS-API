@@ -65,6 +65,10 @@ class CourseManager:
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error generating OAuth2 token {str(e)}")
 
+    def handle_token(self, access_token):
+        self.access_token = access_token
+        return "Authorization Successfull"
+
     def get_user_permissions(self, account_id, permissions):
         """Check if the user has the specified permissions."""
         try:
