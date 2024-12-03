@@ -113,6 +113,7 @@ Reference material: https://developers.formstack.com/reference/oauth2-token-post
 
 Before genearating the token, let's create a `callback` url that will work as our `redirect_url`. It will handle the flow where you first get the authorization code from the URL and then exchange it for the OAuth2 token using the `get_oauth2_token` method below, returning all the relevant token data in the response.
 
+
 Steps
 1. Generate the authorization URL and prompt the user to visit it
 2. The user is redirected 
@@ -196,6 +197,10 @@ class FormProcess:
             return self.access_token
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error generating OAuth2 token {str(e)}")
+            
+    def handle_token(self, access_token):
+        self.access_token = access_token
+        return "Authorization Successfull"            
 ```
 
 routes.forms.py
@@ -212,7 +217,7 @@ form_handler = FormProcess(
     Config.FORM_API_URL,
     Config.FORM_CLIENT_ID,
     Config.FORM_CLIENT_SECRET,
-    "http://localhost:5000/api/callback"  # Always set this as '/callback'
+    Config.REDIRECT_URL # Always set this as '/api/callback'
 )
 
 
@@ -229,6 +234,7 @@ def authorize():
 
 
 
+#Always set this as 'redirect_url'
 @form_routes.route('/api/callback', methods=['GET', 'POST'])
 def callback():
     """
@@ -256,20 +262,13 @@ def callback():
         # Handle JSON payload
         data = request.get_json()
 
-        auth_code = data.get('code') if data else None
-        if auth_code:
-            form_handler.handle_redirect_callback_code(auth_code)
-
-            token_data = form_handler.get_oauth2_token()
-
-            if token_data:
-                # Return the full token data
-                return jsonify(token_data)
-            else:
-                return "Failed to retrieve the access token.", 500
+        access_token = data.get('access_token') if data else None
+        if access_token:
+            status =  form_handler.handle_token(access_token)
+            return jsonify(status), 200
+            
         else:
-            return "Authorization failed."
-
+            return "Authorization failed.", 500
 
 
 ```

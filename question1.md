@@ -1,208 +1,153 @@
-Question 1
-==
-Moringa School is launching a new course titled "Foundation of Data Analysis". The course will include three modules, each containing an assignment and a quiz. The first module should be available immediately, while the others should be released sequentially, one week apart.
-
-- A. Create a course and describe the steps to configure the course in Canvas LMS, including via API
-    - a. Setting up modules, assignments, and quizzes.
-    - b. Configuring sequential module release dates.
-Note: Include code based on your preferred language
-
-
-- B. Explain how you would manage user roles ( instructors, students) and permissions for this course.
-- C. Describe how you would use Canvas APIs to:
-    - a. Automate enrolling users programmatically.
-    - b. Fetch user progress data for external reporting.
-- D. Write a sample API request (in Python, JavaScript, or cURL) to retrieve user progress
-data for a specific course.
-
-
-Solution
+Question 3
 ==
 
-Create a course and set up modules, assignments and quizzes, and also configure sequential release date for the module. 
+The Formstack student application form to collect applicants' information listed below
+1. Personal Details
+ 	-  a. First Name
+ 	-  b. Last Name
+ 	-  c. Email
+ 	-  d. Gender
+ 	-  e. Where are you from?
+ 	-  f. How did you hear about Moringa School?
+ 	-  g. Current Employment Status
+ 	-  h. Class Start Date
+
+2. Professional Background
+	- a. What is your highest level of education completed?
+	- b. What is the name of the institution you attended
+	- c. Please select your area of study from the following
+	- d. How would you describe your 	professional background?
+	- e. Please select your industry from the following
+
+3. Next of Kin Details
+	- a. Name
+	- b. Phone Number
+	- c. Email
+	- d. Data Processing Consent[checkbox]
+
+- A. Write a query that submits the form with an applicant's bio-data via API
+
+- B. Provide a sample JavaScript snippet to validate the start date (ensuring it’s at least two weeks from the current date).
 
 
-Click here for solution [via canvas web instance](/@rkTxYulQTGWx5vBK0dbbiQ/BJSMRBD7yx) Easy Mode 😅
----
+## Solution
 
+   
+- [How to submit an applicant's bio-data via API](#How-to-submit-an-applicants-bio-data-via-API)
+
+Referrence material: https://developers.formstack.com/docs/getting-started
+
+
+- First let's update our code structure, since I'm using a single repository, this is the approach I choose to organise my files
+
+
+```
+    client
+        handlers.js
+        index.js
+        index.html
+
+    config
+        __init__.py
+    models
+       courses.py
+       forms.py
+    
+    routes
+        __init__.py
+        courses.py
+        forms.py
+    main.py
+    .env
+    .gitignore
+    requirements.txt
+    
+``` 
+
+update the .env file
+
+```
+FORM_API_URL=YOUR_FORM_API_URL
+FORM_CLIENT_ID=YOUR_FORM_CLIENT_ID
+FORM_CLIENT_SECRET=YOUR_FORM_CLIENT_SECRET
+REDIERCT_URL=REDIERCT_URL
+```
+
+To follow along
+
+git clone this repository: https://github.com/x0can/LMS-API
+
+Navigate to formstack admin page and obtain the above environment variables
+
+Next 
+
+`pip3 install -r requirements.txt`
+
+`python3 main.py`
+
+On your browser send this request to obtain redirect_url for generating `auth token`
+```
+GET  http://127.0.0.1:5000/api/authorize
 ```
 
 
 
+### How to submit an applicant's bio-data via API
+
+
+Requirements and Assumptions:
+
+1. Need to be an Admin to create an application on FormStack and obtain configurations
+2. Follow through this process on how to get Admin API environment variable 
+`FORM_API_URL,
+    FORM_CLIENT_ID,
+    FORM_CLIENT_SECRET,
+    REDIRECT_URL,
+    `
+    
+    Formstack Aouth2: https://developers.formstack.com/reference/oauth2-authorize-get
+    
+- First we need to obtain an OAuth2 token for us to proceed. 
+
+Reference material: https://developers.formstack.com/reference/oauth2-token-post
+
+Before genearating the token, let's create a `callback` url that will work as our `redirect_url`. It will handle the flow where you first get the authorization code from the URL and then exchange it for the OAuth2 token using the `get_oauth2_token` method below, returning all the relevant token data in the response.
+
+
+Steps
+1. Generate the authorization URL and prompt the user to visit it
+2. The user is redirected 
+3. Extract `code` from the URL and store it
+4. Use the `code` to retrieve the OAuth2 token
+
+github: https://github.com/x0can/LMS-API/blob/main/models/forms.py
 
 
 ```
-
-Solution for API 🤕 Continue
----
-
-To follow along git clone the following repostiory
-
-
-github: https://github.com/x0can/LMS-API
-
-
-
-Canvas API documentation: https://canvas.instructure.com/doc/api/index.html
-
-
-Requirements
-
-
-1. Canavas Instanc URL on Canvas
-3. Client ID from Canvas
-4. Client Secret from Canvas
-
-Project structure
-
-```
-config
-    __init__.py
-models
-   courses.py
-   forms.py
-routes
-    __init__.py
-    courses.py
-    forms.py
-main.py
-.env
-.gitignore
-requirements.txt
-```
-
-
-configure the following environment variables inside the .`env` file
-
-```
-CANVAS_URL=YOUR_CANVAS_URL
-CLIENT_ID=YOUR_ACCOUNT_ID / CLIENT_ID
-CANVAS_CLIENT_SECRET=CANVAS_CLIENT_SECRET
-```
-
-run `pip3 install -r requirements`
-
-then `python3 main.py`
-
-Navigate to the following endpoints, either on `postman` , `VS code Thunderbolt extension` or any other API testing tool.
-
-
-Courses, Modules, Assignments and Quizzes API routes
-
-```
-GET localhost:5000/api/canvas/authorize  - To get url to generate auth token
-
-
-POST localhost:5000/api/create_course  
-
--d = {
-    course_name
-    course_code
-    start_date
-}
-
-POST localhost:5000/api/create_modules
-
--d = {
-    course_id
-    module_name
-}
-
-POST localhost:5000/api/create_assignment
-
-
--d = {
-    course_id
-    assignment_name
-}
-
-POST localhost:5000/api/create_quizz
-
--d = {
-    course_id
-    title
-}
-
-POST localhost:5000/api/configure_module_release_date
-
--d = {
-    course_id
-    module_id
-    start_date
-    interval
-}
-
-```
-
-Enroll Users Routes
-```
-POST localhost:5000/api/users  - To create users
--d = {
-    name
-    email
-}
-
-POST localhost:5000/api/courses/<int:course_id>/enroll
-
-- d = {
-    user_identifier: /email
-}
-
-GET localhost:5000/api/courses/<int:course_id>/enrollments
-
-
-GET localhost:5000/api/fetch_user_progress
-
-
-GET localhost:5000/api/progress_report
-
+GET  /api/v2/oauth2/authorize"
+POST /api/v2/oauth2/token 
 ```
 
 
 
-First since we are working with an API that requires us to be authorized via AOuth2, we need to configure a way to handle this requests for generating the token
+models.forms.py
+```python=-
+import requests
 
 
-```
-GET /login/oauth2/auth
-```
-
-```
-POST /login/oauth2/token
-```
-
-To do that we will start be implementing the following
-
-- Create a class named `CourseManager`
-- Inititate it with the following,
-
-```python=
-class CourseManager:
-    def __init__(self, api_url, account_id, redirect_url, client_secret, code=None, access_token=None):
+class FormProcess:
+    def __init__(self, api_url, client_id, client_secret, redirect_uri, code=None,access_token=None):
         self.api_url = api_url
-        self.account_id = account_id
+        self.client_id = client_id
         self.client_secret = client_secret
-        self.redirect_url = redirect_url
-        self.access_token = access_token
+        self.redirect_uri = redirect_uri
         self.code = code
+        self.access_token=access_token
         self.headers = {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/json"
+                "Authorization": f"Bearer {self.access_token}",
+                "Content-Type": "application/json"
+            }
 
-        }
-
-
-```
-
-Proceed by adding the following methods below the class
-
-`authorize_aouth2` generates url to get auth `code`
-
-`get_oauth2_token`         Generates an OAuth2 token using the Canvas API.
-
-
-
-```python=
 
     def handle_redirect_callback_code(self, code):
         self.code = code
@@ -210,10 +155,10 @@ Proceed by adding the following methods below the class
 
     def authorize_aouth2(self):
 
-        endpoint = f"{self.api_url}/login/oauth2/auth"
+        endpoint = f"{self.api_url}/api/v2/oauth2/authorize"
         try:
             # Construct the authorization URL
-            auth_url = f"{endpoint}?account_id={self.account_id}&response_type=code&redirect_uri={self.redirect_url}"
+            auth_url = f"{endpoint}?client_id={self.client_id}&redirect_uri={self.redirect_uri}&response_type=code"
             return auth_url
 
         except requests.exceptions.RequestException as e:
@@ -221,19 +166,19 @@ Proceed by adding the following methods below the class
 
     def get_oauth2_token(self):
         """
-        Generates an OAuth2 token using the Canvas API.
+        Generates an OAuth2 token using the Formstack API.
         """
 
         if not self.code:
             return "Authorization code is missing. Please authorize first."
 
         # Define endpoint and payload
-        endpoint = f"{self.api_url}/login/oauth2/token"
+        endpoint = f"{self.api_url}/oauth2/token"
         payload = {
             "grant_type": "authorization_code",
-            "account_id": self.account_id,
+            "client_id": self.client_id,
             "client_secret": self.client_secret,
-            "redirect_uri": self.redirect_url,
+            "redirect_uri": self.redirect_uri,
             "code": self.code
         }
 
@@ -248,779 +193,326 @@ Proceed by adding the following methods below the class
             token_data = response.json()
             access_token = token_data.get('access_token')
             self.access_token = access_token
-
+            
             return self.access_token
         except requests.exceptions.RequestException as e:
-            raise Exception(f"Error generating OAuth2 token {str(e)}")            
-
-```
-
-The routes to handle the above are located in this repository: https://github.com/x0can/LMS-API/blob/main/routes/course.py
-
-To proceed to obtain the token
-
-navigate to
-
-`http://localhost:5000/api/canvas/authorize`
-
-This will redirect you to a new page and if you see the following message `Authorization successful. You can close this window.`
-
-Next we can proceed to implement the following
-
-**NB: At the moment there are no session handlers enabled, therefore if you current sesssion terminates, you might need to repeat the above process to re-generate the token**
-
-### How * to Via Canvas LMS API for the following actions
-- [How to create a course Via Canvas API](#How-to-create-a-course-Via-Canvas-API)
-- [How to create a module via Canvas API](#How-to-create-a-module-via-Canvas-API)
-- [How to create an assignment via Canvas API](#How-to-create-an-assignment-via-Canvas-API)
-- [How to create a quizz via Canvas API](#How-to-create-a-quizz-via-Canvas-API)
-- [How to configure sequential module release date](#How-to-configure-sequential-module-release-date)
-
-
-
-### How to create a course Via Canvas API
-
-Documentation: https://canvas.instructure.com/doc/api/courses.html#method.courses.create
-
-Endpoint to send data to on canvas
-```
-POST /api/v1/accounts/:account_id/courses
-```
-
-
-First we need to manage permissions in,
-
-```
-models
-    courses.py
-```
-
-
-### Manage Permissions User Permissions
-
-The following method checks if the user has the permissions listed. Depending on the role it will return True, otherwise, it will notify the user they dont have permissions to perform the action
-
-
-update
-
-models.courses.py
-```python=
-
-class CourseManager:
-    
-...
-   def get_user_permissions(self, account_id, permissions):   
-        try:
-            # Prepare the data payload for permissions
-            data = {f'permissions[]={permission}' for permission in permissions}
-
-            # Fetch user permissions using Canvas API
-            response = requests.post(
-                f"{self.api_url}/accounts/{account_id}/permissions",
-                headers=self.headers,
-                data=data
-            )
+            raise Exception(f"Error generating OAuth2 token {str(e)}")
             
-            if response.status_code == 200:
-                # Process the response to determine if permissions are granted
-                permissions_info = response.json()
-                if all(permissions_info.get(permission, False) for permission in permissions):
-                    return True
-                return False
+    def handle_token(self, access_token):
+        self.access_token = access_token
+        return "Authorization Successfull"            
+```
+
+routes.forms.py
+
+```python=
+from flask import Blueprint, request, jsonify, session
+from models.forms import FormProcess
+from config import Config
+
+form_routes = Blueprint('form_routes', __name__)
+
+
+form_handler = FormProcess(
+    Config.FORM_API_URL,
+    Config.FORM_CLIENT_ID,
+    Config.FORM_CLIENT_SECRET,
+    Config.REDIRECT_URL # Always set this as '/api/callback'
+)
+
+
+@form_routes.route('/api/authorize')
+def authorize():
+    """
+    Auto redirects to the authorization URL to start the OAuth2 flow.
+    """
+    auth_url = form_handler.authorize_aouth2()
+
+    if auth_url:
+        return redirect(auth_url)  # Redirect the user to the authorization URL
+    return "Failed to generate authorization URL."
+
+
+
+#Always set this as 'redirect_url'
+@form_routes.route('/api/callback', methods=['GET', 'POST'])
+def callback():
+    """
+    Handles the OAuth2 redirect callback and processes the authorization code.
+    """
+
+    # Check if the request is a GET or POST request
+    if request.method == 'GET':
+        # Handle query parameters (like 'code')
+        auth_code = request.args.get('code')
+        if auth_code:
+            form_handler.handle_redirect_callback_code(auth_code)
+
+            token_data = form_handler.get_oauth2_token()
+
+            if token_data:
+                # Return the full token data
+                return f"Authorization successful. You can close this window.\n {jsonify(token_data)}"
+            else:
+                return "Failed to retrieve the access token.", 500
+        else:
+            return "Authorization failed."
+
+    elif request.method == 'POST':
+        # Handle JSON payload
+        data = request.get_json()
+
+        access_token = data.get('access_token') if data else None
+        if access_token:
+            status =  form_handler.handle_token(access_token)
+            return jsonify(status), 200
             
-            # Handle unexpected status codes
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Failed to verify user permissions: {str(e)}")
-```
+        else:
+            return "Authorization failed.", 500
 
-To check if user has permissions, we will simply add the following as the first line on top of each method in the `CourseManager` class route. You can check [here](https://github.com/x0can/LMS-API/blob/main/models/courses.py) in the github repository
-
-```python=
-if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
-            raise Exception("User does not have the required permissions to ....")
 
 ```
 
-Permissions reference: https://canvas.instructure.com/doc/api/accounts.html#method.accounts.permissions
 
+- Next we create the `POST` request to submit applicants data
 
+Referrence material: https://developers.formstack.com/reference/submissions
 
-Next create the course Via Canvas API
+```
+POST api/v2/form/{id}/submission.json
+```
 
+Assumptions: Data validation is handled on the client, you can skip to check [here](#How-to-Validate-the-start-date) how the start date is validated to make sure it's at least two weeks from the current date
 
-models.courses.py
+models.forms.py
 ```python=
-class CourseManager:
+class FormProcess:
 
 ...
-
-    def create_course(self, name, start_at, license, course_code):
-        
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
-            raise Exception("User does not have the required permissions to create a course.")
-    
-        
-        """Create a new course in Canvas."""
-        course_data = {
-            "course": {
-                "name": name,
-                "course_code": course_code,
-                "start_at": start_at,
-                "license": license
-            }
-        }
-        try:
-            response = requests.post(
-                f"{self.api_url}/accounts/{self.account_id}/courses",
-                headers=self.headers,
-                json=course_data
-            )
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Failed to create course: {str(e)}")
-      
-
-...
-
-
-
-```
-
-
-### How to create a module via Canvas API
-
-Referrence material: https://canvas.instructure.com/doc/api/courses.html#method.courses.create
-
-To create a module send an API  `POST` request to the following endpoint
-
-parameters:
-- name: module name
-- course_id
-
-Endpoint to send data to on canvas
-
-```
-POST /api/v1/courses/:course_id/modules
-```
-
-
-```
-models
-   courses.py
-```
-
-```python=
-class CourseManager:
-...
-
-    def create_module(self, course_id, module_name):
-        
-        
-        
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
-            raise Exception("User does not have the required permissions to create a module.")
-    
-        
-        """Create a module in the specified course."""
-        
-        module_data = {"name": module_name}
-        try:
-            response = requests.post(
-                f"{self.api_url}/courses/{course_id}/modules",
-                headers=self.headers,
-                json=module_data
-            )
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Failed to create module: {str(e)}")
-
-```
-
-Before we proceed, we need to create a new method to update the module whenever a new Item is added
-
-
-reference doc: https://canvas.instructure.com/doc/api/modules.html#method.context_module_items_api.create
-
-API endpoint to update module items
-
-```
-POST /api/v1/courses/:course_id/modules/:module_id/items
-```
-Parameters and args:
-- module_id 
-- course_id 
-- item_type
-- item_id
-
-
-
-models.courses.py
-```python=
-
-...
-
-    def add_item_to_module(self, course_id, module_id, item_type, item_id):
-        item_data = {
-            "type": item_type,
-            "content_id": item_id
-        }
-        try:
-            response = requests.post(
-                f"{self.api_url}/courses/{course_id}/modules/{module_id}/items",
-                headers=self.headers,
-                json=item_data
-            )
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Failed to update module item: {str(e)}")
-
-
-
-```
-
-
-### How to create an assignment via Canvas API
-
-
-
-Reference material: https://canvas.instructure.com/doc/api/assignments.html#method.assignments_api.create
-
-Parameters and args:
-- name 
-- course_id 
-
-API endpoint:
-
-```
-POST /api/v1/courses/:course_id/assignments
-```
-```python=
-courses.py
-...
-
-
-    def create_assignment(self, course_id, name, module_id):
-        
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
-            raise Exception("User does not have the required permissions to create an assignment.")
-    
-        
-        """Create an assignment and add it to a module."""
-        assignment_data = {"name": name}
-        try:
-            response = requests.post(
-                f"{self.api_url}/courses/{course_id}/assignments",
-                headers=self.headers,
-                json=assignment_data
-            )
-            response.raise_for_status()
-            assignment = response.json()
-
-            # Add the assignment to the module
-            self.add_item_to_module(
-                course_id, module_id, "Assignment", assignment['id'])
-            return assignment
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Failed to create assignment: {str(e)}")
-
-```
-
-### How to create a quizz via Canvas API
-
-parameters:
-- title: title of quizz
-- course_id
-
-API endpoint
-
-```
-POST /api/v1/courses/:course_id/quizzes
-```
-```python=
-...
-
-    def create_quiz(self, course_id, title, module_id):
-        
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
-            raise Exception("User does not have the required permissions to create a quiz.")
-    
-        
-        """Create a quiz and add it to a module."""
-        quiz_data = {"title": title}
-        try:
-            response = requests.post(
-                f"{self.api_url}/courses/{course_id}/quizzes",
-                headers=self.headers,
-                json=quiz_data
-            )
-            response.raise_for_status()
-            quiz = response.json()
-
-            # Add the quiz to the module
-            self.add_item_to_module(
-                course_id, module_id, "Quiz", quiz['id'])
-            return quiz
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Failed to create quiz: {str(e)}")
-
-        
-```
-
-### How to configure sequential module release date
-
-Referrence material: https://canvas.instructure.com/doc/api/modules.html#method.context_modules_api.update
-
-API endpoint
-
-```
-PUT /api/v1/courses/:course_id/modules/:id
-```
-
-Parameters:
-- module[unlock_at]: the date the module will unlock / start date by default it will be added one week to the current date
-- module_id: 
-
-
-Process
-
-
-- Next, create the following new method `configure_module_release_dates`
-
-```
-PUT /api/v1/courses/:course_id/modules/:id
-```
-
-parameters
-
-- course_id
-- module_id
-- start_date
-- interval_weeks i.e How long after the start date
-
-
-```python=
-class CourseManager:
-    
-    ...
-    
-    def configure_module_release_dates(self, course_id, module_id, start_date, interval_weeks):
-        
-        
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
-            raise Exception("User does not have the required permissions to configure module release date.")
-    
-        
-        """Set the release date for a module based on week intervals"""
-        
-        release_date = start_date + timedelta(weeks=interval_weeks)
-        
-        
-        module_data = {
-            "unlock_at": release_date.isoformat()
-        }
-        try:
-            response = requests.put(
-                f"{self.api_url}/courses/{course_id}/modules/{module_id}",
-                headers=self.headers,
-                json=module_data
-            )
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Failed to configure module release dates: {str(e)}")
-
-    
-
-```
-
-Finally we are done with our courses models
-
-#### Routes
-
-Next we need to implement the routes. For that I will add all the available routes in the following repository
-
-github resource: https://github.com/x0can/LMS-API/blob/main/routes/course.py
-
-
-Next let's look at how to automate user enrollments to this course
-
-## Automate user enrollment programmatically
-
-For this we will use the following process
-
-- Step 1: Verify is current account is allowed to perform the actions
-- Step 2: Verify the course by finding if it exists.
-- Step 3: Get / Verify users information to enroll i.e check if they are already added, if not
-- Step 3: Enroll Users
-
-#### step 1: Find / Verify the accounts permissions
-
-
-
-Github: https://github.com/x0can/LMS-API/blob/main/models/courses.py
-
-
-
-Before enrolling any users we need to make sure that the current account has permissions to perform that action, for this we can reuse the method `get_user_permissions`
-
-Canavs API Endpoint to check user permissions
-```
-GET api/v1/accounts/{account_id}/permissions
-```
-
-models.courses.py
-
-```python=
-
-...
-    def get_user_permissions(self, account_id, permissions):
-        """Check if the user has the specified permissions."""
-        try:
-            data = {f"permissions[]={permission}" for permission in permissions}
-            response = requests.post(
-                f"{self.api_url}/accounts/{account_id}/permissions",
-                headers=self.headers,
-                data=data,
-            )
-            response.raise_for_status()
-            permissions_info = response.json()
-            return all(permissions_info.get(permission, False) for permission in permissions)
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Failed to verify user permissions: {str(e)}")
-
-```
-
-
-And like before we will add the following line of code to each method in the class to check permissions for the current account
-
-
-```python=
-if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
-            raise Exception("User does not have the required permissions to create a course.")
-
-        
-```
-#### Step 2: Verify the course by finding if it exists.
-
-Next we create a method to confirm if the course we want to enroll users to is available.
-
-- If the course is found we return the course details
-- If not found, we throw a 404 error. With the message `Course with ID {course_id} not found`
-- If another error occurs we raise an exception
-
-
-Canvas API Endpoint
-
-```
-GET /api/v1/courses/:id
-```
-
-models.courses.py
-
-```python=
-
-    def get_course(self, course_id):
-        """Fetch details for a specific course."""
-        try:
-            response = requests.get(
-                f"{self.api_url}/courses/{course_id}",
-                headers=self.headers,
-            )
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.HTTPError as e:
-            if response.status_code == 404:
-                return {"error": f"Course with ID {course_id} not found."}, 404
-            raise Exception(f"Error fetching course: {response.text}")
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Error fetching course: {str(e)}")
-
-
-
-```
-
-#### Step 3: Get / Verify User Information to enroll: 
-
-Before enrolling a user in a course, we need to verify if the user already exists in the Canvas instance.
-
-Use the Users API to search for the user by email or name.
-
-Resource Material https://canvas.instructure.com/doc/api/users.html#method.users.api_index
-
-Canvas API Endpoint
-
-```
-GET /api/v1/accounts/:account_id/users
-```
-
-
-Parameters:
-- search_term: Search for users by login ID, email, or full name.
-    
-The goal is to avoid duplicate user creation by identifying if a user with the same email or name is already registered.
-
-This method retrieves user details based on the search term (username or email).
-
-Process
-- Fetch user details via API using the `user_identifier` i.e email or user id
-- If found, return the user details
-- If not found throw 404 error with the message `No user found with user_identifier`
-- Else throw an exception error with the message `Error occurred while fetching user info: <ExceptionError>`
-
-models.courses.py
-```python=
-# Add this in the class CanvasUserManager
-...
-    def get_user_info(self, user_identifier):
-        """Fetch user information by username or email."""
-        try:
-            response = requests.get(
-                f"{self.api_url}/accounts/{self.account_id}/users",
-                headers=self.headers,
-                params={"search_term": user_identifier},
-            )
-            response.raise_for_status()
-            users = response.json()
-            return users[0] if users else None
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Failed to fetch user info: {str(e)}")
-```
-
-
-
-
-- **Create a new user if they do not already exist**
-
-    If the user does not exist, we add them to the Canvas instance with their name and email.
-
-    ```
-    POST /api/v1/accounts/{account_id}/users
-
-    ```
-    
-    If they exist we. can skip to the enroll part
-
-    Resource Material https://canvas.instructure.com/doc/api/users.html#method.users.create
-  
-  Required Parameters:
-    - user[name]: The user's full name.
-    - pseudonym[unique_id]: The user's unique login ID (usually their email).
-
-
-models.courses.py
-```python=
-# Add this in the class CanvasUserManager
-
-...
-    # Create a new user if they do not already exist
-    def create_user(self, name, email):
-        """Create a new user in Canvas."""
-        try:
-            user_data = {"user": {"name": name, "pseudonym": {"unique_id": email}}}
-            response = requests.post(
-                f"{self.api_url}/accounts/{self.account_id}/users",
-                headers=self.headers,
-                json=user_data,
-            )
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Error creating user: {str(e)}")
-
-```
-
- 
-#### Step 3. Enroll Users
-
-Resource Material: https://canvas.instructure.com/doc/api/enrollments.html#method.enrollments_api.create
-
-Canvas API Endpoint
-
-```
-POST /api/v1/courses/:course_id/enrollments
-```
-
-Required:
-- enrollment[user_id]: The ID of the user to be enrolled in the course.
-- enrollment[type]: Enroll the user as a student, teacher, TA, observer, or designer. If no value is given, the type will be inferred by enrollment if supplied, otherwise ‘StudentEnrollment’ will be used.
-
-Parameters
-- course_id:
-- User_ids: [] List of user Id's
-- role
-
-Assumption: 
-- All Users have the same role e.g `StudentEnrollment` etc.
-- All users have the same enrollment state i.e Active 
-
-Process:
-- Verify the course if it exists
-- Verify the users if they are in the instance.
-- Define the enrollement data i.e type:role, user state,user_id
-- Bulk enroll users if the above checks out
-
-models.courses.py
-```python=
-# Add this in the class CanvasUserManager
-...
-# Enroll a user into a course
-
-    def enroll_user(self, course_id, data, role="StudentEnrollment", start_at=None, end_at=None):
-        """Enroll users in a specific course."""
-        try:
-            if not self.get_course(course_id):
-                raise Exception(f"Course with ID {course_id} not found.")
-
-            # Extract the user identifier and possibly other user details
-            user_identifier = data.get("user_identifier")
-            if not user_identifier:
-                raise Exception("User identifier is required.")
-
-            # Get user info or create a new user
-            user_info = self.get_user_info(user_identifier)
-            if not user_info:
-                user_info = self.create_user(user_identifier, user_identifier)
-                if not user_info:
-                    print(
-                        f"Failed to create user {user_identifier}. Skipping...")
-                    return
-
-            user_id = user_info["id"]
-
-            # Set default enrollment start time if not provided
-            start_at = start_at or datetime.utcnow().isoformat()
-            # Handle default end date if not provided
-            end_at = end_at or datetime.utcnow().replace(
-                year=datetime.utcnow().year + 1).isoformat()
-
-            enrollment_data = {
-                "enrollment": {
-                    "user_id": user_id,
-                    "type": role,
-                    "start_at": start_at,
-                    "end_at": end_at,
-                    "enrollment_state": "active",
+        def submit_formstack_application(self, form_id, applicant_data):
+            """
+            Submits an application to the Formstack API using OAuth2 tokens.
+            """
+            # Endpoint for form submissions
+            endpoint = f"{self.api_url}/form/{form_id}/submission.json"
+
+            try:
+
+                #get access_token
+                access_token = self.get_oauth2_token()
+
+                # Define headers for authentication
+                headers = {
+                    "Authorization": f"Bearer {access_token}",
+                    "Content-Type": "application/json"
                 }
-            }
 
-            # Send the enrollment request
-            response = requests.post(
-                f"{self.api_url}/courses/{course_id}/enrollments",
-                headers=self.headers,
-                json=enrollment_data,
-            )
-            response.raise_for_status()
-            print(
-                f"User {user_id} successfully enrolled in course {course_id}.")
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Error enrolling user: {str(e)}")
+                # Send POST request to Formstack
+                response = requests.post(endpoint, json=applicant_data, headers=headers)
 
+                # Raise an error if the request failed
+                response.raise_for_status()
+
+                # Return the JSON response if successful
+                return response.json()
+            except requests.exceptions.RequestException as e:
+                print(f"Error submitting the form: {e}")
+                return None
 
 
 ```
 
-#### Finally we implement the routes for this.
+When testing you might incur the following error,`Authorization code is missing. Please authorize first.` 
 
-This is done in the following repository
-
-Github: https://github.com/x0can/LMS-API/blob/main/routes/course.py
-
-
-
-
-## Solution Fetch User Progress Data for External Reporting.
-
-Resource Material: https://canvas.instructure.com/doc/api/courses.html#method.courses.user_progress
-
-Canvas API Endpoint
+If you do, send a request to this endpoint
 
 ```
-GET /api/v1/courses/:course_id/users/:user_id/progress
+GET Http://Your-local-host/api/authorize
 ```
 
-First we need to categorize the type of data we want.
+Then resume the process
 
-Here is a summary of the course progress object
+create the '/submit-form' endpoint
 
-```Json
-{
-  // total number of requirements from all modules
-  "requirement_count": 10,
-  // total number of requirements the user has completed from all modules
-  "requirement_completed_count": 1,
-  // url to next module item that has an unmet requirement. null if the user has
-  // completed the course or the current module does not require sequential
-  // progress
-  "next_requirement_url": "http://localhost/courses/1/modules/items/2",
-  // date the course was completed. null if the course has not been completed by
-  // this user
-  "completed_at": "2013-06-01T00:00:00-06:00"
+routes.forms.py
+```python=
+
+...
+@form_routes.route('/api/submit_form', methods=['POST'])
+def submit_form():
+    data = request.json
+
+    # Validate the required fields in the form data
+    required_fields = [
+        "form_id"
+        "name",
+        "type",
+        "first_name", "last_name", "email", "gender", "from_location", "source",
+        "employment_status", "start_date", "education_level", "institution",
+        "area_of_study", "professional_background", "industry", "kin_name",
+        "kin_phone", "kin_email", "consent"
+    ]
+
+    missing_fields = [field for field in required_fields if field not in data]
+
+    if missing_fields:
+        return jsonify({"error": f"Missing required fields. {missing_fields}"}), 400
+
+    try:
+        # Call the submit_form_data method to send the data
+        response_data, status_code = form_handler.submit_formstack_application(
+            data['form_id'], data)
+
+        return jsonify(response_data), status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+```
+
+
+
+### How to Validate the start date
+
+
+Validate data before sending the `POST` request to the API endpoint `/api/submit-form` above using JavaScript
+
+process
+
+- Create an input validation function to check if the date is two weeks from current date
+- Check if applicant's start date is okay and
+- Send a `POST` request to our backend
+
+
+
+Test by starting a server on the following path `/clients/index.html`
+
+Or simply open the html file on a browser.
+
+
+
+client.handlers.js
+```javascript=
+/**
+ * Validates the start date to ensure it’s at least two weeks from the current date.
+ * @param {string} startDate - The date to be validated in 'YYYY-MM-DD' format.
+ * @returns {boolean} - Returns true if the start date is valid, false otherwise.
+ */
+
+// validator
+
+const validateStartDate = (startDate) => {
+  const today = new Date();
+  const startDateObj = new Date(startDate);
+  const twoWeeksFromToday = new Date(today);
+  twoWeeksFromToday.setDate(today.getDate() + 14); // Set date to 14 days from today
+
+  // Early return if the start date is invalid
+  return (
+    startDateObj >= twoWeeksFromToday || {
+      error: "Start date must be at least 14 days from today.",
+    }
+  );
+};
+
+/**
+ * Submits the form to the following endpoint {url}/submit_form.
+ * @param {object} formData - The form data to send over to the API.
+ * @param {string} url - The API endpoint url, must match the server's endpoint.
+ * @returns {object} - Returns object if successful, error otherwise.
+ */
+
+// handlers
+
+const submitForm = async (formData, url) => {
+  // Validate form data
+  validDate = validateStartDate(formData["start_date"]);
+
+  // If validation fails (validDate is an object with an error), return the error
+  if (validDate.error) {
+    return validDate; 
+  }
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Failed to submit form");
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Error submitting form:", error.message);
+    throw error;
+  }
+};
+
+
+
+function handle_form() {
+  const form = document.getElementById("submitForm");
+
+  const url = "http://127.0.0.1:5000/api/submit_form";
+
+  const formStatus = document.getElementById("formStatus");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = {
+      form_id: 'F1O1',
+      name: form.name.value,
+      type: form.type.value,
+      first_name: form.first_name.value,
+      last_name: form.last_name.value,
+      email: form.email.value,
+      gender: form.gender.value,
+      from_location: form.from_location.value,
+      source: form.source.value,
+      employment_status: form.employment_status.value,
+      start_date: form.start_date.value,
+      education_level: form.education_level.value,
+      institution: form.institution.value,
+      area_of_study: form.area_of_study.value,
+      professional_background: form.professional_background.value,
+      industry: form.industry.value,
+      kin_name: form.kin_name.value,
+      kin_phone: form.kin_phone.value,
+      kin_email: form.kin_email.value,
+      consent: form.consent.checked,
+    };
+
+    try {
+      const result = await submitForm(url, formData);
+
+      const { error } = result;
+
+      if (error) {
+        formStatus.textContent = error;
+        formStatus.style.color = "#F44336";
+      } else {
+        formStatus.textContent = "Form submitted successfully!";
+        formStatus.style.color = "green";
+      }
+    } catch (error) {
+      console.log(error.message);
+      formStatus.textContent = error.message;
+      formStatus.style.color = "#F44336";
+    }
+  });
 }
-```
 
-From the above we need to get the following data fields when generating the report:
-- requirement_count: Total number of requirements in the course.
-- requirement_completed_count: Number of requirements the user has completed.
-- next_requirement_url: API URL for the next requirement.
-- completed_at: Timestamp when the course was completed (null if incomplete).
+handle_form();
 
-Process
-
-- Fetch progress data for a specific user in a course
-- Fetch enrolled users in a course
-- Generate the report with neccessary data fields and write it to a file i.e CSV
-
-**Fetch user progress data for a specific course**
-
-models.courses.py
-```python=
-
-# Add this in the class CanvasUserManager
-
-...
-    def fetch_user_progress(self, course_id, user_id):
-        try:
-            response = requests.get(
-                    f"{self.api_url}/courses/{course_id}/users/{user_id}/progress",
-                   headers=self.headers
-                )
-            if response.status_code == 200:
-                return response.json()
-            else:
-                return {"error": f"Failed to fetch progress: {response.text}"}, response.status_code
-        except requests.exceptions.RequestException as e:
-            return {"error": str(e)}, 500
-```
-
-
-**Fetch enrolled users in a course**
-
-Referrence material: https://canvas.instructure.com/doc/api/enrollments.html#method.enrollments_api.index
-
-API endpoint
 
 ```
-GET /api/v1/courses/:course_id/enrollments
-```
+To test the above
 
-models.courses.py
-```python=
-...
-    # Function to fetch enrolled users in a course
-    def fetch_enrolled_users(self,course_id):
-        
-        try:
-        
-            response = requests.get(f"{self.api_url}/courses/{course_id}/enrollments", headers=self.headers)
-            if response.status_code == 200:
-                return response.json()
-            else:
-                print(f"Failed to fetch enrollments for course {course_id}: {response.status_code}")
-                return []   
-            
-        except requests.exceptions.RequestException as e:
-            return {"error": str(e)}, 500 
-```
+Run a live server inside the `/clients/index.html` file then submit the form there.
