@@ -61,7 +61,7 @@ class CourseManager:
             access_token = token_data.get('access_token')
             self.handle_token(access_token)
 
-            return
+            return access_token
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error generating OAuth2 token {str(e)}")
 
