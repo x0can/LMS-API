@@ -5,26 +5,40 @@ from config import Config
 
 user_routes = Blueprint('user_routes', __name__)
 
-user_manager = CanvasUserManager(Config.API_URL, Config.API_TOKEN, Config.ACCOUNT_ID)
-    
+user_manager = CanvasUserManager(
+    Config.API_URL, Config.API_TOKEN, Config.ACCOUNT_ID)
+
 
 @user_routes.route("/api/users", methods=["POST"])
 def create_user():
-    data = request.json
-    if not data or "name" not in data or "email" not in data:
-        return jsonify({"error": "Name and email are required"}), 400
-    return jsonify(user_manager.create_user(data["name"], data["email"]))
+
+    try:
+        data = request.json
+        if not data or "name" not in data or "email" not in data:
+            return jsonify({"error": "Name and email are required"}), 400
+        return jsonify(user_manager.create_user(data["name"], data["email"]))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @user_routes.route("/api/courses/<int:course_id>/enroll", methods=["POST"])
 def enroll_user(course_id):
-    data = request.json
-    if not data or "user_identifier" not in data:
-        return jsonify({"error": "User identifier is required"}), 400
-    return jsonify(user_manager.enroll_user(course_id, data))
+
+    try:
+        data = request.json
+        if not data or "user_identifier" not in data:
+            return jsonify({"error": "User identifier is required"}), 400
+        return jsonify(user_manager.enroll_user(course_id, data))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @user_routes.route("/api/courses/<int:course_id>/enrollments", methods=["GET"])
 def fetch_enrollments(course_id):
-    return jsonify(user_manager.fetch_enrolled_users(course_id))
+    try:
+        return jsonify(user_manager.fetch_enrolled_users(course_id))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @user_routes.route('/api/fetch_user_progress', methods=['GET'])
@@ -57,5 +71,3 @@ def get_progress_report():
         return jsonify(progress_data), 200
     except Exception as e:
         return jsonify({"error": f"Failed to generate progress report: {str(e)}"}),
-
-
