@@ -3,27 +3,31 @@ Question 3
 
 The Formstack student application form to collect applicants' information listed below
 1. Personal Details
-a. First Name
-b. Last Name
-c. Email
-d. Gender
-e. Where are you from?
-f. How did you hear about Moringa School?
-g. Current Employment Status
-h. Class Start Date
+ 	-  a. First Name
+ 	-  b. Last Name
+ 	-  c. Email
+ 	-  d. Gender
+ 	-  e. Where are you from?
+ 	-  f. How did you hear about Moringa School?
+ 	-  g. Current Employment Status
+ 	-  h. Class Start Date
+
 2. Professional Background
-a. What is your highest level of education completed?
-b. What is the name of the institution you attended
-c. Please select your area of study from the following
-d. How would you describe your professional background?
-e. Please select your industry from the following
+	- a. What is your highest level of education completed?
+	- b. What is the name of the institution you attended
+	- c. Please select your area of study from the following
+	- d. How would you describe your 	professional background?
+	- e. Please select your industry from the following
+
 3. Next of Kin Details
-a. Name
-b. Phone Number
-c. Email
-d. Data Processing Consent[checkbox]
-A. Write a query that submits the form with an applicant's bio-data via API
-B. Provide a sample JavaScript snippet to validate the start date (ensuring it’s at least two weeks from the current date).
+	- a. Name
+	- b. Phone Number
+	- c. Email
+	- d. Data Processing Consent[checkbox]
+
+- A. Write a query that submits the form with an applicant's bio-data via API
+
+- B. Provide a sample JavaScript snippet to validate the start date (ensuring it’s at least two weeks from the current date).
 
 
 ## Solution
