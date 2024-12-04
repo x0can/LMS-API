@@ -150,3 +150,9 @@ GET /api/fetch_user_progress
 GET /api/progress_report
 
 ```
+
+Fetch and display the student performance report.
+
+```
+GET /api/v1/report
+```
