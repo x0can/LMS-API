@@ -33,7 +33,7 @@ class CourseManager:
 
     def get_oauth2_token(self):
         """
-        Generates an OAuth2 token using the Formstack API.
+        Generates an OAuth2 token using the Canvas API.
         """
 
         if not self.code:

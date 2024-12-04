@@ -1,23 +1,3 @@
-Moringa School Assessment
-==
-
-[Updated Documentation:] 
-
-https://hackmd.io/@rkTxYulQTGWx5vBK0dbbiQ/HkbxK4i7Jg/%2FQktFCad6RBqswYR39CcDHw
-
- [Question 1](/question1.md)
----
-
-[Question 2](/question2.md)
----
-
-[Question 3](/question3.md)
----
-
-[Question 4](/question4.md)
----
-
-
 To follow along git clone the following repostiory
 
 
@@ -30,10 +10,10 @@ Canvas API documentation: https://canvas.instructure.com/doc/api/index.html
 
 Requirements
 
-1. Admin rights on Canvas
-2. Access to API URL on Canvas
-3. Account ID from Canvas
-4. API Token from Canvas
+
+1. Canvas Instance URL
+3. Client ID from Canvas
+4. Client Secret from Canvas
 
 Project structure
 
@@ -43,37 +23,51 @@ config
 models
    courses.py
    forms.py
-   users.py
 routes
     __init__.py
     courses.py
     forms.py
-    users.py
 main.py
 .env
 .gitignore
 requirements.txt
 ```
 
+ASSUMPTIONS: The user can configure `ngrok` on their own and set to listen on port `5000`
+
+Signup to ngrok: https://dashboard.ngrok.com/signup
+
+Then obtain the token and run this command: `ngrok config add-authtoken your-ngrok-token`
 
 configure the following environment variables inside the .`env` file
 
 ```
-API_TOKEN=YOUR_API_TOKEN
-API_URL=YOUR_API_URL
-ACCOUNT_ID=YOUR_ACCOUNT_ID
+CANVAS_URL=YOUR_CANVAS_URL
+CLIENT_ID=YOUR_ACCOUNT_ID / CLIENT_ID
+CANVAS_CLIENT_SECRET=CANVAS_CLIENT_SECRET
+REDIRECT_URL_CANVAS='ngrok-public-connection-url-to-/api/callback'
 ```
+
+run `ngrok http 5000`
+
+Obtain the public url and configure all `REDIRECT_***` on `.env` with it
+
+example `REDIRECT_URL_CANVAS='ngrok-public-connection-url-to-/api/callback`
 
 run `pip3 install -r requirements`
 
 then `python3 main.py`
 
-Naviage to the following endpoints, either on postman or use `httpie` to test.
-Courses, Modules, Assignments and Quizzes configuration routes
+Navigate to the following endpoints, either on `postman` , `VS code Thunderbolt extension` or any other API testing tool.
+
+
+Courses, Modules, Assignments and Quizzes API routes
 
 ```
+GET /api/canvas/authorize  - To get url to generate auth token
 
-POST localhost:5000/api/create_course  
+
+POST /api/create_course  
 
 -d = {
     course_name
@@ -81,14 +75,14 @@ POST localhost:5000/api/create_course
     start_date
 }
 
-POST localhost:5000/api/create_modules
+POST /api/create_modules
 
 -d = {
     course_id
     module_name
 }
 
-POST localhost:5000/api/create_assignment
+POST /api/create_assignment
 
 
 -d = {
@@ -96,14 +90,14 @@ POST localhost:5000/api/create_assignment
     assignment_name
 }
 
-POST localhost:5000/api/create_quizz
+POST /api/create_quizz
 
 -d = {
     course_id
     title
 }
 
-POST localhost:5000/api/configure_module_release_date
+POST /api/configure_module_release_date
 
 -d = {
     course_id
@@ -116,25 +110,24 @@ POST localhost:5000/api/configure_module_release_date
 
 Enroll Users Routes
 ```
-POST localhost:5000/api/users  - To create users
+POST /api/users  - To create users
 -d = {
     name
     email
 }
 
-POST localhost:5000/api/courses/<int:course_id>/enroll
+POST /api/courses/<int:course_id>/enroll
 
 - d = {
     user_identifier: /email
 }
 
-GET localhost:5000/api/courses/<int:course_id>/enrollments
+GET /api/courses/<int:course_id>/enrollments
 
 
-GET localhost:5000/api/fetch_user_progress
+GET /api/fetch_user_progress
 
 
-GET localhost:5000/api/progress_report
+GET /api/progress_report
 
 ```
-
