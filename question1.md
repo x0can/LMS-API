@@ -182,7 +182,7 @@ POST /login/oauth2/token
 To do that we will start be implementing the following
 
 - Create a class named `CourseManager`
-- Initiate it with the following,
+- Initialise it with the following,
 
 ```python=
 class CourseManager:
