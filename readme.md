@@ -2,7 +2,7 @@ Moringa School Assessment
 ==
 
 ## 📖 Documentation
-RECOMMENDED [Updated Documentation](https://hackmd.io/@rkTxYulQTGWx5vBK0dbbiQ/HkbxK4i7Jg/%2FQktFCad6RBqswYR39CcDHw)
+✅ RECOMMENDED [Updated Documentation](https://hackmd.io/@rkTxYulQTGWx5vBK0dbbiQ/HkbxK4i7Jg/%2FQktFCad6RBqswYR39CcDHw)
 ==
 
 
