@@ -71,7 +71,7 @@ run `ngrok http 5000`
 
 Obtain the public url and configure all `REDIRECT_***` on `.env` with it
 
-example `REDIRECT_URL_CANVAS='ngrok-public-connection-url-to-/api/callback`
+example `REDIRECT_URL_CANVAS='ngrok-public-connection-url-to-/api/canvas/callback` for canvas and `REDIRECT_URL='ngrok-public-connection-url-to-/api/callback` for formstack
 
 run `pip3 install -r requirements`
 
