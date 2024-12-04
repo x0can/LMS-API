@@ -25,13 +25,8 @@ Create a course and set up modules, assignments and quizzes, and also configure 
 Click here for solution [via canvas web instance](/@rkTxYulQTGWx5vBK0dbbiQ/BJSMRBD7yx) Easy Mode 😅
 ---
 
-```
+![392009642-3f5ad82c-f972-4d3d-bebc-78c89f7da8a7](https://hackmd.io/_uploads/rJUXlUAX1g.jpg)
 
-
-
-
-
-```
 
 Solution for API 🤕 Continue
 ---
