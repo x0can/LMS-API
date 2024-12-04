@@ -9,7 +9,7 @@ form_handler = FormProcess(
     Config.FORM_API_URL,
     Config.FORM_CLIENT_ID,
     Config.FORM_CLIENT_SECRET,
-    "http://localhost:5000/api/callback"  # Always set this as '/api/callback'
+    Config.REDIRECT_URL # Always set this as '/api/callback'
 )
 
 
