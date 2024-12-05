@@ -16,7 +16,7 @@ form_handler = FormProcess(
 @form_routes.route('/api/authorize')
 def authorize():
     """
-    Automaticall redirects to the authorization URL to start the OAuth2 flow.
+    Automaticaly redirects to the authorization URL to start the OAuth2 flow.
     """
     auth_url = form_handler.authorize_aouth2()
 
