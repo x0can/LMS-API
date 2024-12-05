@@ -221,7 +221,7 @@ Proceed by adding the following methods below the class
         endpoint = f"{self.api_url}/login/oauth2/auth"
         try:
             # Construct the authorization URL
-            auth_url = f"{endpoint}?account_id={self.account_id}&response_type=code&redirect_uri={self.redirect_url}"
+            auth_url = f"{endpoint}?client_id={self.account_id}&response_type=code&redirect_uri={self.redirect_url}"
             return auth_url
 
         except requests.exceptions.RequestException as e:
