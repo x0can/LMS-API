@@ -239,7 +239,7 @@ Proceed by adding the following methods below the class
         endpoint = f"{self.api_url}/login/oauth2/token"
         payload = {
             "grant_type": "authorization_code",
-            "account_id": self.account_id,
+            "client_id": self.account_id,
             "client_secret": self.client_secret,
             "redirect_uri": self.redirect_url,
             "code": self.code
