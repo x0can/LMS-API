@@ -22,7 +22,7 @@ Solution
 Create a course and set up modules, assignments and quizzes, and also configure sequential release date for the module. 
 
 
-Click here for solution [via canvas web instance](/@rkTxYulQTGWx5vBK0dbbiQ/BJSMRBD7yx) Easy Mode 😅
+Click here for solution [via canvas web instance](/web.md) Easy Mode 😅
 ---
 
 
