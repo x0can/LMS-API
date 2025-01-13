@@ -104,7 +104,7 @@ def callback():
             return "Authorization failed.", 500
 
 
-@course_routes.route('/api/canvas/create_course', methods=['GET'])
+@course_routes.route('/api/canvas/get_account_id', methods=['GET'])
 def get_account_id():
     course = course_manager.get_account_id()
     return jsonify(course), 201
