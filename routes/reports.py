@@ -7,7 +7,15 @@ from db.student_queries import get_student_performance
 report_routes = Blueprint('report_routes', __name__)
 
 
-@report_routes.route("/api/v1/report", methods=["GET"])
+@report_routes.route("/api/v1/report")
+@swag_from({
+    "tags": ["Student performance report"],
+    'responses': {
+        302: {
+            'description': 'Fetch and display the student performance report.'
+        }
+    }
+})
 def fetch_report():
     """Fetch and display the student performance report."""
     conn = get_connection()

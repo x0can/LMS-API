@@ -17,6 +17,8 @@ form_handler = FormProcess(
 
 @form_routes.route('/api/formstack/authorize')
 @swag_from({
+    "tags": ["FormStack AOth2 GET"],
+
     'responses': {
         200: {
             'description': 'Redirects to the authorization URL to start OAuth2 flow',
@@ -46,6 +48,8 @@ def authorize():
 # Always set this as 'redirect_url'
 @form_routes.route('/api/formstack/callback', methods=['GET', 'POST'])
 @swag_from({
+    "tags": ["FormStack AOth2 Callback Endpoint"],
+
     'parameters': [
         {
             'name': 'code',
@@ -124,6 +128,8 @@ def callback():
 
 @form_routes.route('/api/formstack/submit_form', methods=['POST'])
 @swag_from({
+    "tags": ["Submit Form to FormStack API"],
+
     'parameters': [
         {
             'name': 'form_data',

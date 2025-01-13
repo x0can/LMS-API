@@ -19,7 +19,7 @@ course_manager = CourseManager(
 
 @course_routes.route('/api/canvas/authorize')
 @swag_from({
-    "tags": ["AOth2 GET"],
+    "tags": ["Canvas AOth2 GET"],
     'responses': {
         302: {
             'description': 'Redirect to the authorization URL for OAuth2 flow'
@@ -40,7 +40,7 @@ def authorize():
 # Always set this as 'redirect_url'
 @course_routes.route('/api/canvas/callback', methods=['GET', 'POST'])
 @swag_from({
-    "tags": ["AOth2 Callback Endpoint"],
+    "tags": ["Canvas AOth2 Callback Endpoint"],
     'responses': {
         200: {
            'description': 'Authorization successful and token retrieved',
@@ -137,7 +137,50 @@ def get_account_id():
         201: {
             'description': 'Course created successfully',
             'schema': {
-                'type': 'object'
+                'type': 'object',
+                'properties': {
+
+                        "account_id": {'type': 'number'},
+                        "allow_student_forum_attachments": {'type': 'boolean'},
+                        "allow_wiki_comments": {'type': 'object'},
+                        "apply_assignment_group_weights": {'type': 'boolean'},
+                        "blueprint": {'type': 'boolean'},
+                        "calendar": {
+                            "ics": {'type': 'string'}
+                        },
+                    "conclude_at": {"type": "string", "format": "date-time"},
+                    "course_code": {"type": "string"},
+                    "course_color": {"type": "string"},
+                    "created_at": {"type": "string", "format": "date-time"},
+                    "default_view": {"type": "string"},
+                    "end_at": {"type": "string", "format": "date-time"},
+                    "enrollment_term_id": {"type": "number"},
+                    "friendly_name": {"type": "string", "nullable": True},
+                    "grade_passback_setting": {"type": "string", "nullable": True},
+                    "grading_standard_id": {"type": "number", "nullable": True},
+                    "hide_final_grades": {"type": "boolean", "default": False},
+                    "homeroom_course": {"type": "boolean", "default": False},
+                    "id": {"type": "number"},
+                    "is_public": {"type": "boolean", "default": False},
+                    "is_public_to_auth_users": {"type": "boolean", "default": False},
+                    "license": {"type": "string", "default": "private"},
+                    "name": {"type": "string"},
+                    "open_enrollment": {"type": "boolean", "nullable": True},
+                    "public_syllabus": {"type": "boolean", "default": False},
+                    "public_syllabus_to_auth": {"type": "boolean", "default": False},
+                    "restrict_enrollments_to_course_dates": {"type": "boolean", "default": False},
+                    "root_account_id": {"type": "number"},
+                    "self_enrollment": {"type": "boolean", "nullable": True},
+                    "start_at": {"type": "string", "format": "date-time", "nullable": True},
+                    "storage_quota_mb": {"type": "number", "default": 2000},
+                    "template": {"type": "boolean", "default": False},
+                    "time_zone": {"type": "string", "default": "America/Denver"},
+                    "uuid": {"type": "string"},
+                    "workflow_state": {"type": "string", "default": "unpublished"}
+
+
+
+                }
             }
         },
         400: {

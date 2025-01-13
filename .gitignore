@@ -1,3 +1,5 @@
 .env
 student_performance.db
 *_.db
+*.pyc
+__pycache__

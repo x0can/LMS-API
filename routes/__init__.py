@@ -28,19 +28,18 @@ swagger_config = {
 
 swagger_template = {
     "swagger_ui_parameters": {
-            "canvas_url": canvas_url,
-            "redirect_url_canvas": redirect_url_canvas,
-            "canvas_client_secret": canvas_client_secret,
-            "api_token": api_token
-        },
+        "canvas_url": canvas_url,
+        "redirect_url_canvas": redirect_url_canvas,
+        "canvas_client_secret": canvas_client_secret,
+        "api_token": api_token
+    },
     "info": {
-        "title": "Custom API",
-        "description": "This is an API middleware for interracting with Cannvas APi and FormStack API",
+        "title": "CUSTOM INTEGRATION FOR CANVAS API AND FORMSTACK API, AND DEMO SQL QUERIES ENDPOINTS THAT GENERATES A CUSTOM STUDENT REPORTS",
+        "description": "Interracte with Canvas APi and FormStack API, alongside an SQL endpoint, for  generating a report  an SQL database",
         "version": "1.0",
         "contact": {
             "name": "Alex Mwaura",
             "email": "alexmwaura43@gmail.com",
-            "url": "#",
         },
         "license": {
             "name": "Apache 2.0",
@@ -49,20 +48,14 @@ swagger_template = {
     },
     "host": "localhost:5000",
     "basePath": "/",
-    "schemes": ["http"],
-    "tags": [
-        {
-            "name": "Custom Endpoints",
-            "description": "A group of custom endpoints",
-        }
-    ],
-    
-}
 
+
+
+}
 
 def configure_routes(app):
 
     app.register_blueprint(course_routes)
     app.register_blueprint(form_routes)
     app.register_blueprint(report_routes)
-    Swagger(app, template=swagger_template, config=swagger_config, )
+    Swagger(app, template=swagger_template, config=swagger_config )
