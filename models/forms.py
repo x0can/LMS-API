@@ -20,7 +20,7 @@ class FormProcess:
 
     def authorize_aouth2(self):
 
-        endpoint = f"{self.api_url}/api/v2/oauth2/authorize"
+        endpoint = f"{self.api_url}api/v2/oauth2/authorize"
         try:
             # Construct the authorization URL
             auth_url = f"{endpoint}?client_id={self.client_id}&redirect_uri={self.redirect_uri}&response_type=code"
@@ -74,7 +74,7 @@ class FormProcess:
         Submits an application to the Formstack API using OAuth2 tokens.
         """
         # Endpoint for form submissions
-        endpoint = f"{self.api_url}/form/{form_id}/submission"
+        endpoint = f"{self.api_url}api/v2/form/{form_id}/submission"
 
         try:
 

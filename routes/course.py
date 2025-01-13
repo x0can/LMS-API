@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, redirect
 from datetime import datetime
 from config import Config
 from models.courses import CourseManager
+from flasgger.utils import swag_from
 
 
 course_routes = Blueprint('course_routes', __name__)
@@ -9,12 +10,30 @@ course_routes = Blueprint('course_routes', __name__)
 
 course_manager = CourseManager(
     Config.CANVAS_URL, Config.CLIENT_ID,
-    Config.REDIRECT_URL_CANVAS, # Always set to /api/canvas/callback
-    Config.CANVAS_CLIENT_SECRET
+    Config.REDIRECT_URL_CANVAS,  # Always set to /api/canvas/callback
+    Config.CANVAS_CLIENT_SECRET,
+    None,
+    Config.API_TOKEN
 )
 
 
 @course_routes.route('/api/canvas/authorize')
+@swag_from({
+    'responses': {
+        200: {
+            'description': 'Redirects to the authorization URL for OAuth2 flow',
+            'schema': {
+                'type': 'string'
+            }
+        },
+        500: {
+            'description': 'Failed to generate authorization URL',
+            'schema': {
+                'type': 'string'
+            }
+        }
+    }
+})
 def authorize():
     """
     Automaticall redirects to the authorization URL to start the OAuth2 flow.
@@ -28,6 +47,28 @@ def authorize():
 
 # Always set this as 'redirect_url'
 @course_routes.route('/api/canvas/callback', methods=['GET', 'POST'])
+@swag_from({
+    'responses': {
+        200: {
+            'description': 'OAuth2 authorization code handled and token retrieved successfully',
+            'schema': {
+                'type': 'string'
+            }
+        },
+        400: {
+            'description': 'Authorization failed or missing parameters',
+            'schema': {
+                'type': 'string'
+            }
+        },
+        500: {
+            'description': 'Failed to retrieve or handle the token',
+            'schema': {
+                'type': 'string'
+            }
+        }
+    }
+})
 def callback():
     """
     Handles the OAuth2 redirect callback and processes the authorization code.
@@ -56,19 +97,75 @@ def callback():
 
         access_token = data.get('access_token') if data else None
         if access_token:
-            status =  course_manager.handle_token(access_token)
+            status = course_manager.handle_token(access_token)
             return jsonify(status), 200
-            
+
         else:
             return "Authorization failed.", 500
 
 
-@course_routes.route('/api/create_course', methods=['POST'])
+@course_routes.route('/api/canvas/create_course', methods=['GET'])
+def get_account_id():
+    course = course_manager.get_account_id()
+    return jsonify(course), 201
+
+
+@course_routes.route('/api/canvas/create_course', methods=['POST'])
+@swag_from({
+    'parameters': [
+        {
+            'name': 'course_name',
+            'in': 'body',
+            'description': 'Name of the course',
+            'required': True,
+            'schema': {
+                'type': 'string'
+            }
+        },
+        {
+            'name': 'course_code',
+            'in': 'body',
+            'description': 'Code of the course',
+            'required': True,
+            'schema': {
+                'type': 'string'
+            }
+        },
+        {
+            'name': 'start_date',
+            'in': 'body',
+            'description': 'Start date of the course',
+            'required': True,
+            'schema': {
+                'type': 'string',
+                'format': 'date-time'
+            }
+        }
+    ],
+    'responses': {
+        201: {
+            'description': 'Course created successfully',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        400: {
+            'description': 'Missing required fields',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        500: {
+            'description': 'Failed to create course',
+            'schema': {
+                'type': 'object'
+            }
+        }
+    }
+})
 def create_course():
 
     data = request.json
-
-    print(data)
 
     course_name = data.get("course_name")
     course_code = data.get("course_code")
@@ -79,13 +176,56 @@ def create_course():
 
     try:
         course = course_manager.create_course(
-            course_name, start_date, 'private', course_code)
+            course_name, start_date, 'public', course_code)
+
         return jsonify(course), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@course_routes.route('/api/create_modules', methods=['POST'])
+@course_routes.route('/api/canvas/create_modules', methods=['POST'])
+@swag_from({
+    'parameters': [
+        {
+            'name': 'course_id',
+            'in': 'body',
+            'description': 'ID of the course',
+            'required': True,
+            'schema': {
+                'type': 'integer'
+            }
+        },
+        {
+            'name': 'module_name',
+            'in': 'body',
+            'description': 'Name of the module to create',
+            'required': True,
+            'schema': {
+                'type': 'string'
+            }
+        }
+    ],
+    'responses': {
+        201: {
+            'description': 'Module created successfully',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        400: {
+            'description': 'Missing required fields',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        500: {
+            'description': 'Failed to create module',
+            'schema': {
+                'type': 'object'
+            }
+        }
+    }
+})
 def create_modules():
 
     data = request.json
@@ -96,13 +236,64 @@ def create_modules():
         return jsonify({"error": "Missing required fields"}), 400
 
     try:
-        module = course_manager.create_modules(course_id, module_name)
+        module = course_manager.create_module(course_id, module_name)
         return jsonify(module), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@course_routes.route('/api/create_assignment', methods=['POST'])
+@course_routes.route('/api/canvas/create_assignment', methods=['POST'])
+@swag_from({
+    'parameters': [
+        {
+            'name': 'course_id',
+            'in': 'body',
+            'description': 'ID of the course',
+            'required': True,
+            'schema': {
+                'type': 'integer'
+            }
+        },
+        {
+            'name': 'assignment_name',
+            'in': 'body',
+            'description': 'Name of the assignment to create',
+            'required': True,
+            'schema': {
+                'type': 'string'
+            }
+        },
+        {
+            'name': 'module_id',
+            'in': 'body',
+            'description': 'ID of the module to associate the assignment with',
+            'required': True,
+            'schema': {
+                'type': 'integer'
+            }
+        }
+    ],
+    'responses': {
+        201: {
+            'description': 'Assignment created successfully',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        400: {
+            'description': 'Missing required fields',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        500: {
+            'description': 'Failed to create assignment',
+            'schema': {
+                'type': 'object'
+            }
+        }
+    }
+})
 def create_assignments():
 
     data = request.json
@@ -114,14 +305,66 @@ def create_assignments():
         return jsonify({"error": "Missing required fields"}), 400
 
     try:
-        course_manager.create_assignments(course_id, assignment_name, module_id)
+        course_manager.create_assignments(
+            course_id, assignment_name, module_id)
 
         return jsonify({"message": "Assignments created successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@course_routes.route('/api/create_quizz', methods=['POST'])
+@course_routes.route('/api/canvas/create_quizz', methods=['POST'])
+@swag_from({
+    'parameters': [
+        {
+            'name': 'course_id',
+            'in': 'body',
+            'description': 'ID of the course',
+            'required': True,
+            'schema': {
+                'type': 'integer'
+            }
+        },
+        {
+            'name': 'module_id',
+            'in': 'body',
+            'description': 'ID of the module',
+            'required': True,
+            'schema': {
+                'type': 'integer'
+            }
+        },
+        {
+            'name': 'title',
+            'in': 'body',
+            'description': 'Title of the quiz',
+            'required': True,
+            'schema': {
+                'type': 'string'
+            }
+        }
+    ],
+    'responses': {
+        201: {
+            'description': 'Quiz created successfully',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        400: {
+            'description': 'Missing required fields',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        500: {
+            'description': 'Failed to create quiz',
+            'schema': {
+                'type': 'object'
+            }
+        }
+    }
+})
 def create_quizzes():
 
     data = request.json
@@ -139,7 +382,68 @@ def create_quizzes():
         return jsonify({"error": str(e)}), 500
 
 
-@course_routes.route('/api/configure_module_release_date', methods=['POST'])
+@course_routes.route('/api/canvas/configure_module_release_date', methods=['POST'])
+@swag_from({
+    'parameters': [
+        {
+            'name': 'course_id',
+            'in': 'body',
+            'description': 'ID of the course',
+            'required': True,
+            'schema': {
+                'type': 'integer'
+            }
+        },
+        {
+            'name': 'module_id',
+            'in': 'body',
+            'description': 'ID of the module to configure release date for',
+            'required': True,
+            'schema': {
+                'type': 'integer'
+            }
+        },
+        {
+            'name': 'start_date',
+            'in': 'body',
+            'description': 'Start date of the module release',
+            'required': True,
+            'schema': {
+                'type': 'string',
+                'format': 'date-time'
+            }
+        },
+        {
+            'name': 'interval',
+            'in': 'body',
+            'description': 'Interval in weeks between module releases',
+            'required': True,
+            'schema': {
+                'type': 'integer'
+            }
+        }
+    ],
+    'responses': {
+        201: {
+            'description': 'Module release date configured successfully',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        400: {
+            'description': 'Missing required fields',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        500: {
+            'description': 'Failed to configure module release date',
+            'schema': {
+                'type': 'object'
+            }
+        }
+    }
+})
 def configure_module_release_dates():
 
     data = request.json
@@ -151,9 +455,8 @@ def configure_module_release_dates():
     if not all([course_id, module_id, start_date, interval_week]):
         return jsonify({"error": "Missing required fields"}), 400
 
-    
     try:
-        
+
         start_date = datetime.fromisoformat(start_date)
         course_manager.configure_module_release_dates(
             course_id, module_id, start_date, interval_week)
@@ -162,24 +465,99 @@ def configure_module_release_dates():
         return jsonify({"error": str(e)}), 500
 
 
-@course_routes.route("/api/users", methods=["POST"])
+@course_routes.route("/api/canvas/users", methods=["POST"])
+@swag_from({
+    'parameters': [
+        {
+            'name': 'name',
+            'in': 'body',
+            'description': 'Name of the user to create',
+            'required': True,
+            'schema': {
+                'type': 'string'
+            }
+        },
+        {
+            'name': 'email',
+            'in': 'body',
+            'description': 'Email of the user to create',
+            'required': True,
+            'schema': {
+                'type': 'string',
+                'format': 'email'
+            }
+        }
+    ],
+    'responses': {
+        201: {
+            'description': 'User created successfully',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        400: {
+            'description': 'Missing required fields',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        500: {
+            'description': 'Failed to create user',
+            'schema': {
+                'type': 'object'
+            }
+        }
+    }
+})
 def create_user():
 
     data = request.json
     name = data.get('name')
     email = data.get('email')
-    
+
     if not all([name, email]):
         return jsonify({"error": "Missing required fields"}), 400
 
-    
     try:
         return jsonify(course_manager.create_user(name, email))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@course_routes.route("/api/courses/<int:course_id>/enroll", methods=["POST"])
+@course_routes.route("/api/canvas/courses/<int:course_id>/enroll", methods=["POST"])
+@swag_from({
+    'parameters': [
+        {
+            'name': 'user_identifier',
+            'in': 'body',
+            'description': 'User identifier to enroll in the course',
+            'required': True,
+            'schema': {
+                'type': 'string'
+            }
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'User enrolled successfully',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        400: {
+            'description': 'Missing user identifier',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        500: {
+            'description': 'Failed to enroll user',
+            'schema': {
+                'type': 'object'
+            }
+        }
+    }
+})
 def enroll_user(course_id):
 
     try:
@@ -192,7 +570,26 @@ def enroll_user(course_id):
         return jsonify({"error": str(e)}), 500
 
 
-@course_routes.route("/api/courses/<int:course_id>/enrollments", methods=["GET"])
+@course_routes.route("/api/canvas/courses/<int:course_id>/enrollments", methods=["GET"])
+@swag_from({
+    'responses': {
+        200: {
+            'description': 'List of users enrolled in the course',
+            'schema': {
+                'type': 'array',
+                'items': {
+                    'type': 'object'
+                }
+            }
+        },
+        500: {
+            'description': 'Failed to fetch enrollments',
+            'schema': {
+                'type': 'object'
+            }
+        }
+    }
+})
 def fetch_enrollments(course_id):
     try:
         return jsonify(course_manager.fetch_enrolled_users(course_id))
@@ -200,7 +597,55 @@ def fetch_enrollments(course_id):
         return jsonify({"error": str(e)}), 500
 
 
-@course_routes.route('/api/fetch_user_progress', methods=['GET'])
+@course_routes.route('/api/canvas/fetch_user_progress', methods=['GET'])
+@swag_from({
+    'parameters': [
+        {
+            'name': 'course_id',
+            'in': 'query',
+            'description': 'ID of the course to fetch user progress for',
+            'required': True,
+            'schema': {
+                'type': 'integer'
+            }
+        },
+        {
+            'name': 'user_id',
+            'in': 'query',
+            'description': 'ID of the user to fetch progress for',
+            'required': True,
+            'schema': {
+                'type': 'integer'
+            }
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'User progress retrieved successfully',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        400: {
+            'description': 'Missing required query parameters',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        404: {
+            'description': 'User progress not found',
+            'schema': {
+                'type': 'object'
+            }
+        },
+        500: {
+            'description': 'Failed to fetch user progress',
+            'schema': {
+                'type': 'object'
+            }
+        }
+    }
+})
 def api_fetch_user_progress():
     course_id = request.args.get("course_id")
     user_id = request.args.get("user_id")
@@ -219,7 +664,7 @@ def api_fetch_user_progress():
         return jsonify({"error": str(e)}), 500
 
 
-@course_routes.route('/api/progress_report', methods=['GET'])
+@course_routes.route('/api/canvas/progress_report', methods=['GET'])
 def get_progress_report():
     course_id = request.args.get('course_id')
     if not course_id:

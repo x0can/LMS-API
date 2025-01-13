@@ -1,7 +1,11 @@
 import os
+
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Unset previously loaded environment variables
+os.environ.clear()
+
+# Reload the .env file
 load_dotenv()
 
 
@@ -12,6 +16,6 @@ class Config:
     FORM_API_URL = os.getenv('FORM_API_URL')
     FORM_CLIENT_ID = os.getenv('FORM_CLIENT_ID')
     FORM_CLIENT_SECRET = os.getenv('FORM_SECRET')
-    REDIRECT_URL = os.getenv('REDIRECT_URL')
+    REDIRECT_URL_FORM = os.getenv('REDIRECT_URL_FORM')
     CANVAS_CLIENT_SECRET = os.getenv('CANVAS_CLIENT_SECRET')
     REDIRECT_URL_CANVAS= os.getenv('REDIRECT_URL_CANVAS')

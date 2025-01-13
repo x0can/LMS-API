@@ -25,7 +25,8 @@ class CourseManager:
         endpoint = f"{self.api_url}/login/oauth2/auth"
         try:
             # Construct the authorization URL
-            auth_url = f"{endpoint}?client_id={self.account_id}&response_type=code&redirect_uri={self.redirect_url}"
+            auth_url = f"{endpoint}?client_id={
+                self.account_id}&response_type=code&redirect_uri={self.redirect_url}"
             return auth_url
 
         except requests.exceptions.RequestException as e:
@@ -71,10 +72,11 @@ class CourseManager:
 
     def get_user_permissions(self, account_id, permissions):
         """Check if the user has the specified permissions."""
+
         try:
             data = {f"permissions[]={permission}" for permission in permissions}
             response = requests.post(
-                f"{self.api_url}/accounts/{account_id}/permissions",
+                f"{self.api_url}/api/v1/accounts/{account_id}/permissions",
                 headers=self.headers,
                 data=data,
             )
@@ -84,24 +86,61 @@ class CourseManager:
         except requests.exceptions.RequestException as e:
             raise Exception(f"Failed to verify user permissions: {str(e)}")
 
+    def get_account_id(self):
+        url = f"{self.api_url}/api/v1/course_accounts"
+        try:
+            response = requests.get(url, headers=self.headers)
+
+            accounts = response.json()  # Get the account details in JSON format
+            self.account_id = accounts[0]['id']
+
+            return f"account with id: {self.account_id} has been obtained successfully"
+
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Failed to obtain account info: {str(e)}")
+
+
+    def enroll_user_in_course(self, course_id, user_id, role="teacher"):
+        url = f"{self.api_url}/courses/{course_id}/enrollments"
+        data = {
+            "enrollment": {
+                "user_id": user_id,
+                "type": "TeacherEnrollment" if role.lower() == "teacher" else "StudentEnrollment",
+                "enrollment_state": "active"
+            }
+        }
+
+        try:
+            response = requests.post(url, headers=self.headers, json=data)
+            response.raise_for_status()
+            print(f"User {user_id} successfully enrolled in course {
+                  course_id}!")
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error enrolling user: {e}")
+            print(f"Response Text: {response.text}")
+            raise Exception(f"Failed to enroll user: {str(e)}")
+
     def create_course(self, name, start_at, license, course_code):
 
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
-            raise Exception(
-                "User does not have the required permissions to create a course.")
-
-        """Create a new course in Canvas."""
         course_data = {
             "course": {
                 "name": name,
                 "course_code": course_code,
                 "start_at": start_at,
-                "license": license
+                "license": license,
+                "workflow_state": "available",  # Correct placement
+                "is_public": True,  # Correct placement
+                "is_public_to_auth_users": True,  # Correct placement
+                "public_syllabus": True,  # Correct placement
+                "public_syllabus_to_auth": True  # Correct placement
             }
         }
         try:
+
+            print(course_data)
             response = requests.post(
-                f"{self.api_url}/accounts/{self.account_id}/courses",
+                f"{self.api_url}/api/v1/accounts/{self.account_id}/courses",
                 headers=self.headers,
                 json=course_data
             )
@@ -112,16 +151,10 @@ class CourseManager:
 
     def create_module(self, course_id, module_name):
 
-        if not self.get_user_permissions(self.account_id, permissions=['manage_courses_admin']):
-            raise Exception(
-                "User does not have the required permissions to create a module.")
-
-        """Create a module in the specified course."""
-
         module_data = {"name": module_name}
         try:
             response = requests.post(
-                f"{self.api_url}/courses/{course_id}/modules",
+                f"{self.api_url}/api/v1/courses/{course_id}/modules",
                 headers=self.headers,
                 json=module_data
             )
@@ -137,7 +170,7 @@ class CourseManager:
         }
         try:
             response = requests.post(
-                f"{self.api_url}/courses/{course_id}/modules/{module_id}/items",
+                f"{self.api_url}/api/v1/courses/{course_id}/modules/{module_id}/items",
                 headers=self.headers,
                 json=item_data
             )
@@ -156,7 +189,7 @@ class CourseManager:
         assignment_data = {"name": name}
         try:
             response = requests.post(
-                f"{self.api_url}/courses/{course_id}/assignments",
+                f"{self.api_url}/api/v1/courses/{course_id}/assignments",
                 headers=self.headers,
                 json=assignment_data
             )
@@ -180,7 +213,7 @@ class CourseManager:
         quiz_data = {"title": title}
         try:
             response = requests.post(
-                f"{self.api_url}/courses/{course_id}/quizzes",
+                f"{self.api_url}/api/v1/courses/{course_id}/quizzes",
                 headers=self.headers,
                 json=quiz_data
             )
@@ -209,7 +242,7 @@ class CourseManager:
         }
         try:
             response = requests.put(
-                f"{self.api_url}/courses/{course_id}/modules/{module_id}",
+                f"{self.api_url}/api/v1/courses/{course_id}/modules/{module_id}",
                 headers=self.headers,
                 json=module_data
             )
@@ -226,7 +259,7 @@ class CourseManager:
 
         try:
             response = requests.get(
-                f"{self.api_url}/accounts/{self.account_id}/users",
+                f"{self.api_url}/api/v1/accounts/{self.account_id}/users",
                 headers=self.headers,
                 params={"search_term": user_identifier},
             )
@@ -244,7 +277,7 @@ class CourseManager:
 
         try:
             response = requests.get(
-                f"{self.api_url}/courses/{course_id}",
+                f"{self.api_url}/api/v1/courses/{course_id}",
                 headers=self.headers,
             )
             response.raise_for_status()
@@ -266,7 +299,7 @@ class CourseManager:
             user_data = {"user": {"name": name,
                                   "pseudonym": {"unique_id": email}}}
             response = requests.post(
-                f"{self.api_url}/accounts/{self.account_id}/users",
+                f"{self.api_url}/api/v1/accounts/{self.account_id}/users",
                 headers=self.headers,
                 json=user_data,
             )
@@ -319,7 +352,7 @@ class CourseManager:
 
             # Send the enrollment request
             response = requests.post(
-                f"{self.api_url}/courses/{course_id}/enrollments",
+                f"{self.api_url}/api/v1/courses/{course_id}/enrollments",
                 headers=self.headers,
                 json=enrollment_data,
             )
@@ -337,7 +370,7 @@ class CourseManager:
 
         try:
             response = requests.get(
-                f"{self.api_url}/courses/{course_id}/users/{user_id}/progress",
+                f"{self.api_url}/api/v1/courses/{course_id}/users/{user_id}/progress",
                 headers=self.headers,
             )
             response.raise_for_status()
@@ -353,7 +386,7 @@ class CourseManager:
 
         try:
             response = requests.get(
-                f"{self.api_url}/courses/{course_id}/enrollments", headers=self.headers
+                f"{self.api_url}/api/v1/courses/{course_id}/enrollments", headers=self.headers
             )
             response.raise_for_status()
             return response.json()
