@@ -19,18 +19,10 @@ course_manager = CourseManager(
 
 @course_routes.route('/api/canvas/authorize')
 @swag_from({
+    "tags": ["AOth2 GET"],
     'responses': {
-        200: {
-            'description': 'Redirects to the authorization URL for OAuth2 flow',
-            'schema': {
-                'type': 'string'
-            }
-        },
-        500: {
-            'description': 'Failed to generate authorization URL',
-            'schema': {
-                'type': 'string'
-            }
+        302: {
+            'description': 'Redirect to the authorization URL for OAuth2 flow'
         }
     }
 })
@@ -48,24 +40,21 @@ def authorize():
 # Always set this as 'redirect_url'
 @course_routes.route('/api/canvas/callback', methods=['GET', 'POST'])
 @swag_from({
+    "tags": ["AOth2 Callback Endpoint"],
     'responses': {
         200: {
-            'description': 'OAuth2 authorization code handled and token retrieved successfully',
+           'description': 'Authorization successful and token retrieved',
             'schema': {
-                'type': 'string'
+                'type': 'object',
+                'properties': {
+                    'access_token': {'type': 'string'},
+                    'token_type': {'type': 'string'},
+                    'expires_in': {'type': 'integer'}
+                }
             }
-        },
-        400: {
-            'description': 'Authorization failed or missing parameters',
-            'schema': {
-                'type': 'string'
-            }
-        },
+           },
         500: {
-            'description': 'Failed to retrieve or handle the token',
-            'schema': {
-                'type': 'string'
-            }
+            'description': 'Error retrieving token'
         }
     }
 })
@@ -112,6 +101,8 @@ def get_account_id():
 
 @course_routes.route('/api/canvas/create_course', methods=['POST'])
 @swag_from({
+    "tags": ["Create Course"],
+
     'parameters': [
         {
             'name': 'course_name',
@@ -185,6 +176,7 @@ def create_course():
 
 @course_routes.route('/api/canvas/create_modules', methods=['POST'])
 @swag_from({
+    "tags": ["Create Modules"],
     'parameters': [
         {
             'name': 'course_id',
@@ -244,6 +236,8 @@ def create_modules():
 
 @course_routes.route('/api/canvas/create_assignment', methods=['POST'])
 @swag_from({
+    "tags": ["Create Assignment"],
+
     'parameters': [
         {
             'name': 'course_id',
@@ -315,6 +309,8 @@ def create_assignments():
 
 @course_routes.route('/api/canvas/create_quizz', methods=['POST'])
 @swag_from({
+    "tags": ["Create Quizz"],
+
     'parameters': [
         {
             'name': 'course_id',
@@ -384,6 +380,8 @@ def create_quizzes():
 
 @course_routes.route('/api/canvas/configure_module_release_date', methods=['POST'])
 @swag_from({
+    "tags": ["Configure Module Release Date"],
+
     'parameters': [
         {
             'name': 'course_id',
@@ -467,6 +465,8 @@ def configure_module_release_dates():
 
 @course_routes.route("/api/canvas/users", methods=["POST"])
 @swag_from({
+    "tags": ["Add User to Canvas"],
+
     'parameters': [
         {
             'name': 'name',
@@ -526,6 +526,8 @@ def create_user():
 
 @course_routes.route("/api/canvas/courses/<int:course_id>/enroll", methods=["POST"])
 @swag_from({
+    "tags": ["Enroll User to Course"],
+
     'parameters': [
         {
             'name': 'user_identifier',
@@ -572,6 +574,8 @@ def enroll_user(course_id):
 
 @course_routes.route("/api/canvas/courses/<int:course_id>/enrollments", methods=["GET"])
 @swag_from({
+    "tags": ["Fetch All Enrolled User for A Course"],
+
     'responses': {
         200: {
             'description': 'List of users enrolled in the course',
@@ -599,6 +603,8 @@ def fetch_enrollments(course_id):
 
 @course_routes.route('/api/canvas/fetch_user_progress', methods=['GET'])
 @swag_from({
+    "tags": ["Fetch User Progress in A particular Course"],
+
     'parameters': [
         {
             'name': 'course_id',
@@ -665,6 +671,24 @@ def api_fetch_user_progress():
 
 
 @course_routes.route('/api/canvas/progress_report', methods=['GET'])
+@swag_from({
+    "tags": ["Fetch User Progress in A particular Course"],
+
+    'responses': {
+        200: {
+            'description': 'Progress report retrieved successfully',
+        },
+        400: {
+            'description': 'Missing required query parameters',
+        },
+        404: {
+            'description': 'Progress not found',
+        },
+        500: {
+            'description': 'Failed to fetch  progress report',
+        }
+    }
+})
 def get_progress_report():
     course_id = request.args.get('course_id')
     if not course_id:

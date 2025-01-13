@@ -38,7 +38,7 @@ class FormProcess:
             return "Authorization code is missing. Please authorize first."
 
         # Define endpoint and payload
-        endpoint = f"{self.api_url}/oauth2/token"
+        endpoint = f"{self.api_url}/api/v2/oauth2/token"
         payload = {
             "grant_type": "authorization_code",
             "client_id": self.client_id,

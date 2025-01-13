@@ -386,7 +386,7 @@ class CourseManager:
 
         try:
             response = requests.get(
-                f"{self.api_url}/api/v1/courses/{course_id}/enrollments", headers=self.headers
+                f"{self.api_url}/api/v1//courses/{course_id}/enrollments", headers=self.headers
             )
             response.raise_for_status()
             return response.json()
